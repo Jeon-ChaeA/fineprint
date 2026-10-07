@@ -46,10 +46,10 @@
 
 - [x] 프로젝트 방향과 에이전트 코어 결정
 - [x] 첫 대상 상품 확정: 신용대출
-- [ ] 금융 앱에서 신용대출 약관이 어떻게 보이는지 직접 관찰하고 기록
+- [x] 금융 앱 4곳에서 신용대출 약관이 어떻게 보이는지 관찰하고 기록 ([결과](research/app-observation.md))
+- [x] 문제 정의 2차 작성 ([background.md](docs/background.md))
 - [ ] 사용자 인터뷰 질문 작성, 5명 섭외
 - [ ] 공시 약관 수집처 확인
-- [ ] 문제 정의 1페이지 작성
 
 ## 문서
 
@@ -62,6 +62,7 @@
 | [decision-log.md](docs/decision-log.md) | 주요 결정과 그 이유, 검토했던 대안 |
 | [data-policy.md](docs/data-policy.md) | 데이터 원칙과 리스크 |
 | [devlog/](docs/devlog/) | 날짜별 작업 기록 |
+| [research/app-observation.md](research/app-observation.md) | 금융 앱 4곳 신용대출 화면 관찰 |
 
 ## 데이터 원칙
 
