@@ -6,6 +6,9 @@
  *
  * 설정 방법은 research/survey/README.md 참고.
  */
+// 응답을 저장할 스프레드시트 ID (주소의 /d/ 와 /edit 사이)
+const SHEET_ID = 'YOUR_SHEET_ID';
+
 const FIELDS = [
   'loan_exp', 'products', 'read_level', 'skip_reasons', 'check_items',
   'surprised', 'surprised_story', 'summary_left', 'summary_question',
@@ -19,7 +22,7 @@ function doPost(e) {
     const data = JSON.parse(e.postData.contents || '{}');
     if (data._hp) return ok_();  // 스팸 봇이 채우는 숨은 필드
 
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = SpreadsheetApp.openById(SHEET_ID);
     const now = new Date();
 
     const responses = sheet_(ss, 'responses', ['received_at'].concat(FIELDS));
@@ -36,6 +39,11 @@ function doPost(e) {
 
 function doGet() {
   return ContentService.createTextOutput('fineprint survey endpoint is running.');
+}
+
+/** 배포 전에 한 번 실행해 권한을 승인하고 시트를 준비한다. */
+function setup() {
+  sheet_(SpreadsheetApp.openById(SHEET_ID), 'responses', ['received_at'].concat(FIELDS));
 }
 
 function sheet_(ss, name, header) {

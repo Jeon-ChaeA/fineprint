@@ -11,18 +11,20 @@
 - 설문 답변은 익명이다. 이메일, 이름, 연락처는 받지 않는다.
 - 응답 원본은 이 레포에 올리지 않는다. 집계 결과와 익명 인용만 올린다.
 
-## 설정 방법 (처음 한 번)
+## 현재 상태
 
-1. Google 스프레드시트를 새로 만든다. 이름 예: `fineprint 설문 응답`
-2. 메뉴 **확장 프로그램 → Apps Script**
-3. 기본 코드를 지우고 `sheet-endpoint.gs` 내용을 붙여 넣고 저장
-4. 오른쪽 위 **배포 → 새 배포**
-   - 유형: **웹 앱**
-   - 실행 사용자: **나**
-   - 액세스 권한: **모든 사용자**
-5. 권한 승인 → 나오는 **웹 앱 URL**(`https://script.google.com/macros/s/.../exec`)을 복사
-6. `survey/index.html`의 `const ENDPOINT = "";`에 그 URL을 넣고 커밋
-7. 레포 **Settings → Pages** → Source: **Deploy from a branch**, Branch: **main / (root)** → Save
+- 응답 시트: 개인 Google 계정의 `fineprint 설문 응답` (비공개)
+- 수집 스크립트: Apps Script 프로젝트 `fineprint survey endpoint`, 웹 앱으로 배포 (실행: 나, 액세스: 모든 사용자)
+- 설문 페이지의 `ENDPOINT`에 웹 앱 URL 연결 완료
+
+## 처음부터 다시 설정할 때
+
+1. Google 스프레드시트를 새로 만들고, 주소에서 시트 ID를 복사한다.
+2. https://script.google.com 에서 새 프로젝트를 만들고 `sheet-endpoint.gs` 내용을 붙여 넣는다. `SHEET_ID`에 시트 ID를 넣는다.
+3. `setup` 함수를 한 번 실행해 권한을 승인한다.
+4. **배포 → 새 배포** → 유형 **웹 앱**, 실행 사용자 **나**, 액세스 권한 **모든 사용자**
+5. 나온 웹 앱 URL을 `survey/index.html`의 `ENDPOINT`에 넣고 커밋한다.
+6. 레포 **Settings → Pages** → Branch **main / (root)** → Save
 
 ## 확인
 
