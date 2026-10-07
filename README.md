@@ -48,7 +48,7 @@
 - [x] 첫 대상 상품 확정: 신용대출
 - [x] 금융 앱 4곳에서 신용대출 약관이 어떻게 보이는지 관찰하고 기록 ([결과](research/app-observation.md))
 - [x] 문제 정의 2차 작성 ([background.md](docs/background.md))
-- [x] 사용자 설문 페이지 공개 ([설문](https://jeon-chaea.github.io/fineprint/survey/), [설계와 설정](research/survey/README.md))
+- [x] 사용자 설문 페이지 공개 ([설문](https://fineprint-survey.netlify.app/), [설계와 설정](research/survey/README.md))
 - [ ] 설문 응답 수집 (목표 20건 이상)과 결과 정리
 - [ ] 공시 약관 수집처 확인
 

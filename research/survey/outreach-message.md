@@ -1,6 +1,8 @@
 # 설문 홍보 문구
 
-설문 링크: https://jeon-chaea.github.io/fineprint/survey/
+설문 링크: https://fineprint-survey.netlify.app/
+
+예비 링크(GitHub Pages): https://jeon-chaea.github.io/fineprint/survey/ (일부 회사 네트워크에서 `github.io`가 차단돼 Netlify 주소를 기본으로 쓴다)
 
 상황에 맞게 골라 쓴다. 지인 2~3명에게 먼저 돌려 보고, 헷갈리는 질문이 없으면 넓게 퍼뜨린다.
 
@@ -14,7 +16,7 @@
 
 다른 분들은 약관을 어떻게 읽는지, 뭘 몰라서 당황했는지 궁금해서 짧은 설문을 만들었어요.
 
-👉 https://jeon-chaea.github.io/fineprint/survey/
+👉 https://fineprint-survey.netlify.app/
 
 · 5분이면 끝나요
 · 익명이고, 이름이나 연락처는 안 받아요
@@ -32,7 +34,7 @@
 실제로 사람들이 약관을 어떻게 읽는지 알아보는 설문을 하고 있어요.
 
 📋 금융 약관, 정말 읽고 동의하시나요? (5분, 익명)
-https://jeon-chaea.github.io/fineprint/survey/
+https://fineprint-survey.netlify.app/
 
 대출·카드·보험 약관 때문에 당황했던 경험 있으시면 꼭 남겨 주세요.
 주변에도 공유해 주시면 더 감사하고요! 🙏
@@ -50,7 +52,7 @@ https://jeon-chaea.github.io/fineprint/survey/
 만들기 전에 실제로 사람들이 약관을 어떻게 읽는지 먼저 듣고 싶어요.
 
 5분, 익명 설문이에요.
-https://jeon-chaea.github.io/fineprint/survey/
+https://fineprint-survey.netlify.app/
 
 #사이드프로젝트 #금융 #AI #UX리서치
 ```
@@ -60,7 +62,7 @@ https://jeon-chaea.github.io/fineprint/survey/
 ```
 지난번에 부탁드린 약관 설문, 혹시 아직이시면 이번 주까지 참여 부탁드려요!
 5분이면 끝나요 🙏
-https://jeon-chaea.github.io/fineprint/survey/
+https://fineprint-survey.netlify.app/
 ```
 
 ## 주의
