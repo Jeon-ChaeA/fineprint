@@ -74,8 +74,6 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
 .done{text-align:center;padding:40px 22px}
 .done .big{font-size:44px;margin-bottom:8px}
-.consent{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;color:var(--ink-2);margin-top:10px}
-.consent input{margin-top:3px;accent-color:var(--accent);width:18px;height:18px;flex:none}
 .notice{font-size:13px;color:var(--danger);margin-top:12px}
 a{color:var(--accent)}
 </style>
@@ -170,14 +168,10 @@ const STEPS = [
       o: ["약관 원문의 조항 번호와 문장을 함께 보여 주기", "모르는 건 모른다고 말하기", "금융사나 공식 기관이 확인한 정보라는 표시",
           "틀렸을 때 사람에게 다시 확인할 방법", "AI 설명은 믿기 어렵다"] }
   ]},
-  { title: "응답자 정보", sub: "통계용이에요. 답하지 않아도 괜찮아요.", qs: [
+  { title: "응답자 정보", sub: "통계용이에요. 답하지 않아도 괜찮아요.", last: true, qs: [
     { id: "age", type: "radio", t: "연령대", o: ["20대", "30대", "40대", "50대 이상", "응답하지 않음"] },
     { id: "job", type: "radio", t: "하시는 일", o: ["직장인", "자영업·프리랜서", "학생", "금융업 종사자", "그 외", "응답하지 않음"] }
   ]},
-  { title: "인터뷰 참여", sub: "20~30분 정도 온라인으로 조금 더 이야기를 나눠 주실 분을 찾고 있어요. 선택 사항이에요.", last: true, qs: [
-    { id: "interview", type: "radio", t: "짧은 인터뷰에 참여해 주실 수 있나요?", o: ["네, 참여할게요", "아니요"] },
-    { id: "contact", type: "line", t: "연락받을 방법 (이메일 또는 카카오톡 ID)", h: "참여해 주실 때만 적어 주세요.", showIf: ["interview", "네, 참여할게요"] }
-  ]}
 ];
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -217,15 +211,9 @@ function renderQ(q){
       `</div><div class="scale-legend"><span>1 · ${esc(q.lo)}</span><span>5 · ${esc(q.hi)}</span></div>`;
   } else if (q.type === "text"){
     body = `<textarea name="${q.id}" maxlength="1500"></textarea>`;
-  } else if (q.type === "line"){
-    body = `<input type="text" name="${q.id}" maxlength="100" autocomplete="off">
-      <label class="consent"><input type="checkbox" name="contact_consent" value="yes">
-      <span>[개인정보 수집·이용 동의] 수집 항목: 이메일 또는 카카오톡 ID · 목적: 인터뷰 일정 연락 · 보관 기간: 인터뷰 종료 후 즉시 파기.
-      동의하지 않아도 설문 참여에는 불이익이 없어요.</span></label>`;
   }
-  const hide = q.showIf ? " hidden" : "";
-  return `<div class="q${hide}" data-q="${q.id}"><p class="q-title">${esc(q.t)}${req}</p>${help}${body}
-    <p class="err">${q.type === "line" ? "연락처를 적으셨다면 개인정보 수집·이용에 동의해 주세요." : "이 질문에 답해 주세요."}</p></div>`;
+  return `<div class="q" data-q="${q.id}"><p class="q-title">${esc(q.t)}${req}</p>${help}${body}
+    <p class="err">이 질문에 답해 주세요.</p></div>`;
 }
 
 function render(){
@@ -240,7 +228,7 @@ function render(){
 function values(name){ return [...form.querySelectorAll(`[name="${name}"]:checked`)].map(i => i.value); }
 
 function answerOf(q){
-  if (q.type === "text" || q.type === "line") return (form.elements[q.id].value || "").trim();
+  if (q.type === "text") return (form.elements[q.id].value || "").trim();
   const v = values(q.id).map(x => x === "__other" ? "기타: " + (form.elements[q.id + "__other"].value || "").trim() : x);
   return v.join(" | ");
 }
@@ -251,7 +239,6 @@ function validate(i){
   s.qs.forEach(q => {
     const box = $(`[data-q="${q.id}"]`);
     let bad = !!(q.req && !answerOf(q));
-    if (q.type === "line" && answerOf(q) && !form.elements.contact_consent.checked) bad = true;
     box.classList.toggle("invalid", bad);
     if (bad){ ok = false; first = first || box; }
   });
@@ -276,8 +263,6 @@ async function submit(){
   sending = true; $("#next").disabled = true; $("#next").textContent = "보내는 중…";
   const data = { _hp: form.elements._hp.value, submitted_at: new Date().toISOString(), ua_mobile: /Mobi/i.test(navigator.userAgent) ? "mobile" : "desktop" };
   STEPS.forEach(s => (s.qs || []).forEach(q => { data[q.id] = answerOf(q); }));
-  data.contact_consent = form.elements.contact_consent.checked ? "yes" : "";
-  if (!data.contact_consent) data.contact = "";
   try {
     await fetch(ENDPOINT, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(data) });
     form.classList.add("hidden"); $("#nav").classList.add("hidden");
@@ -298,9 +283,6 @@ form.addEventListener("change", e => {
     if (other) other.classList.toggle("hidden", !values(t.name).includes("__other"));
     if (t.value === "__other" && t.checked && other) other.focus();
   }
-  STEPS.forEach(s => (s.qs || []).forEach(q => {
-    if (q.showIf) $(`[data-q="${q.id}"]`).classList.toggle("hidden", values(q.showIf[0])[0] !== q.showIf[1]);
-  }));
   const box = t.closest(".q"); if (box) box.classList.remove("invalid");
 });
 form.addEventListener("submit", e => e.preventDefault());

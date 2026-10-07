@@ -3,14 +3,13 @@
  *
  * survey/index.html 에서 보낸 응답을 Google 스프레드시트에 저장한다.
  * - responses 시트: 설문 답변 (익명)
- * - contacts 시트: 인터뷰 연락처 (동의한 경우만, 답변과 분리 저장)
  *
  * 설정 방법은 research/survey/README.md 참고.
  */
 const FIELDS = [
   'loan_exp', 'products', 'read_level', 'skip_reasons', 'check_items',
   'surprised', 'surprised_story', 'summary_left', 'summary_question',
-  'help_wanted', 'help_top', 'trust_needs', 'age', 'job', 'interview', 'ua_mobile'
+  'help_wanted', 'help_top', 'trust_needs', 'age', 'job', 'ua_mobile'
 ];
 
 function doPost(e) {
@@ -26,10 +25,6 @@ function doPost(e) {
     const responses = sheet_(ss, 'responses', ['received_at'].concat(FIELDS));
     responses.appendRow([now].concat(FIELDS.map(function (k) { return clean_(data[k]); })));
 
-    if (data.contact && data.contact_consent === 'yes') {
-      const contacts = sheet_(ss, 'contacts', ['received_at', 'contact']);
-      contacts.appendRow([now, clean_(data.contact)]);
-    }
     return ok_();
   } catch (err) {
     return ContentService.createTextOutput(JSON.stringify({ ok: false }))
