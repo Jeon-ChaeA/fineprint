@@ -43,7 +43,9 @@ function doGet() {
 
 /** 배포 전에 한 번 실행해 권한을 승인하고 시트를 준비한다. */
 function setup() {
-  sheet_(SpreadsheetApp.openById(SHEET_ID), 'responses', ['received_at'].concat(FIELDS));
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+  ss.setSpreadsheetTimeZone('Asia/Seoul');
+  sheet_(ss, 'responses', ['received_at'].concat(FIELDS));
 }
 
 function sheet_(ss, name, header) {

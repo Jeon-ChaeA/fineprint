@@ -36,7 +36,7 @@
 
 | 주차 | 할 일 | 산출물 |
 |---|---|---|
-| 1주차: 문제 정의 | 금융 앱의 약관 노출 방식 관찰, 사용자 인터뷰 5명 내외 | 문제 정의 1페이지, 인터뷰 메모 |
+| 1주차: 문제 정의 | 금융 앱의 약관 노출 방식 관찰, 익명 사용자 설문 | 문제 정의 1페이지, 설문 결과 |
 | 2주차: 코어 구축 | 공시 약관 수집, 조항 단위 분할, 근거 인용 에이전트, 소비자용 프로토타입 | 동작하는 프로토타입, 평가 질문셋 |
 | 3주차: 패키징 | 소비자용 PRD, 기업용 도입 제안서, 빌드 로그 정리 | PRD, 도입 제안서, 빌드 로그 |
 
@@ -48,7 +48,8 @@
 - [x] 첫 대상 상품 확정: 신용대출
 - [x] 금융 앱 4곳에서 신용대출 약관이 어떻게 보이는지 관찰하고 기록 ([결과](research/app-observation.md))
 - [x] 문제 정의 2차 작성 ([background.md](docs/background.md))
-- [ ] 사용자 인터뷰 질문 작성, 5명 섭외
+- [x] 사용자 설문 페이지 공개 ([설문](https://jeon-chaea.github.io/fineprint/survey/), [설계와 설정](research/survey/README.md))
+- [ ] 설문 응답 수집 (목표 20건 이상)과 결과 정리
 - [ ] 공시 약관 수집처 확인
 
 ## 문서
@@ -63,6 +64,7 @@
 | [data-policy.md](docs/data-policy.md) | 데이터 원칙과 리스크 |
 | [devlog/](docs/devlog/) | 날짜별 작업 기록 |
 | [research/app-observation.md](research/app-observation.md) | 금융 앱 4곳 신용대출 화면 관찰 |
+| [research/survey/](research/survey/) | 사용자 설문 설계, 응답 수집 설정, 홍보 문구 |
 
 ## 데이터 원칙
 
