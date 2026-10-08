@@ -14,7 +14,7 @@
 - [x] 설문 응답 20건 이상 모으고 결과 정리 (39건, [결과](../research/survey-results.md))
 - [x] 설문 결과로 방향 결정 (D-008, 39건으로 재검토해 유지)
 - [x] 공시 약관 수집처 확인 ([수집처](../research/terms-sources.md))
-- [ ] 문제 정의 1페이지 작성 (관찰, 설문, D-008 반영)
+- [x] 문제 정의 1페이지 작성 ([problem-statement.md](problem-statement.md))
 
 산출물: 문제 정의 1페이지, 관찰 기록, 설문 결과
 

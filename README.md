@@ -8,7 +8,7 @@
 - AI가 대신 읽어 주면 편하지만, 금융 정보는 틀리면 안 된다. 그럴듯한 오답이 가장 위험하다.
 - 그래서 fineprint의 목표는 "잘 요약하는 AI"가 아니라 **근거를 대거나, 모르면 모른다고 말하는 AI**다.
 
-자세한 배경은 [docs/background.md](docs/background.md)에 있다.
+자세한 배경은 [docs/background.md](docs/background.md)에, 현재 문제 정의는 [docs/problem-statement.md](docs/problem-statement.md)에 있다.
 
 ## 무엇을 만드나
 
@@ -52,13 +52,14 @@
 - [x] 설문 응답 39건 수집과 결과 정리 ([결과](research/survey-results.md))
 - [x] 첫 기능 방향 결정: 근거가 붙은 불리한 조건 요약 + 조항 근거 답변 ([D-008](docs/decision-log.md))
 - [x] 공시 약관 수집처 확인 ([수집처](research/terms-sources.md))
-- [ ] 문제 정의 1페이지 작성
+- [x] 문제 정의 1페이지 작성 ([문제 정의](docs/problem-statement.md))
 
 ## 문서
 
 | 문서 | 내용 |
 |---|---|
-| [background.md](docs/background.md) | 왜 시작했는가, 문제 정의 |
+| [problem-statement.md](docs/problem-statement.md) | 문제 정의 1페이지 (관찰·설문·약관 원문 근거) |
+| [background.md](docs/background.md) | 왜 시작했는가, 문제 정의가 바뀌어 온 과정 |
 | [concept.md](docs/concept.md) | 에이전트 코어와 두 가지 쓰임새 |
 | [design-principles.md](docs/design-principles.md) | 신뢰를 위한 설계 원칙 |
 | [roadmap.md](docs/roadmap.md) | 사이클별 계획 |

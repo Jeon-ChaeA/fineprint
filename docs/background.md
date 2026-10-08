@@ -38,6 +38,8 @@
 
 그래서 첫 기능은 **근거가 붙은 불리한 조건 요약**과 **조항 근거 답변**으로 정했다. ([설문 결과](../research/survey-results.md), [D-008](decision-log.md))
 
+정리된 최신 문제 정의는 [problem-statement.md](problem-statement.md)에 있다.
+
 ## fineprint가 답하려는 질문
 
 1. 금융 약관을 읽는 AI가 **틀리지 않으려면** 어떻게 설계해야 하는가?
