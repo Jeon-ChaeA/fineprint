@@ -2,3 +2,8 @@ data/raw/
 data/processed/
 .DS_Store
 __pycache__/
+runs/*/prompts.jsonl
+runs/*/batch*.jsonl
+runs/*/answers[0-9].jsonl
+runs/*/ai_grades.json
+runs/*/grading.new.md
