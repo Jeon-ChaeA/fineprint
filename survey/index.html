@@ -3,20 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>fineprint 설문 · 금융 약관, 정말 읽고 동의하시나요?</title>
-<meta name="description" content="대출·카드·보험 약관을 어떻게 읽는지 묻는 5분 설문입니다. 금융 약관을 근거와 함께 읽어 주는 AI 프로젝트 fineprint를 위한 조사예요.">
-<meta property="og:title" content="금융 약관, 정말 읽고 동의하시나요?">
-<meta property="og:description" content="5분 설문 · fineprint 프로젝트">
+<title>fineprint 설문 · 마감되었습니다</title>
+<meta name="description" content="fineprint 금융 약관 설문은 마감되었습니다. 참여해 주셔서 감사합니다.">
+<meta property="og:title" content="fineprint 설문이 마감되었습니다">
+<meta property="og:description" content="참여해 주셔서 감사합니다 · fineprint 프로젝트">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
 :root{
   --bg:#f7f5ef; --paper:#fffdf8; --ink:#1d1c19; --ink-2:#5b5852; --ink-3:#8b877e;
-  --line:#e4dfd3; --accent:#1f4fd6; --accent-ink:#fff; --hl:#ffe36e; --danger:#c2372b;
+  --line:#e4dfd3; --accent:#1f4fd6; --accent-ink:#fff; --hl:#ffe36e;
   --radius:14px; --shadow:0 1px 0 rgba(0,0,0,.03),0 8px 24px -12px rgba(40,30,0,.18);
 }
 @media (prefers-color-scheme:dark){
   :root{--bg:#121210;--paper:#1b1a17;--ink:#f2efe7;--ink-2:#bdb8ad;--ink-3:#8a857b;
-    --line:#2f2d28;--accent:#7ea0ff;--accent-ink:#0e1530;--hl:#6b5a12;--danger:#ff7a6e;
+    --line:#2f2d28;--accent:#7ea0ff;--accent-ink:#0e1530;--hl:#6b5a12;
     --shadow:0 1px 0 rgba(255,255,255,.02),0 8px 24px -12px rgba(0,0,0,.6);}
 }
 *{box-sizing:border-box}
@@ -24,275 +24,32 @@ html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
   font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;word-break:keep-all}
 .wrap{max-width:640px;margin:0 auto;padding:20px 16px 96px}
-header.top{display:flex;align-items:center;justify-content:space-between;padding:4px 0 16px}
-.brand{font-weight:800;letter-spacing:-.02em;font-size:18px}
+.brand{font-weight:800;letter-spacing:-.02em;font-size:18px;padding:4px 0 16px}
 .brand small{font-weight:500;color:var(--ink-3);font-size:12px;margin-left:6px;letter-spacing:0}
-.step-count{font-size:13px;color:var(--ink-3);font-variant-numeric:tabular-nums}
-.progress{height:4px;background:var(--line);border-radius:4px;overflow:hidden;margin-bottom:20px}
-.progress>i{display:block;height:100%;width:0;background:var(--accent);transition:width .3s ease}
 .card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:28px 22px}
 h1{font-size:28px;line-height:1.3;letter-spacing:-.03em;margin:4px 0 14px}
-h2{font-size:21px;line-height:1.35;letter-spacing:-.02em;margin:0 0 6px}
 .mark{background:linear-gradient(transparent 58%,var(--hl) 58%);padding:0 2px}
 .lead{color:var(--ink-2);margin:0 0 18px}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 20px;border-radius:12px;
+  background:var(--accent);color:var(--accent-ink);font-weight:700;text-decoration:none}
 .fine{font-size:12.5px;line-height:1.55;color:var(--ink-3);border-top:1px dashed var(--line);margin-top:22px;padding-top:14px}
 .fine p{margin:0 0 4px}
 .fine p::before{content:"* ";}
-.q{margin:26px 0 0}
-.q:first-of-type{margin-top:18px}
-.q-title{font-weight:700;font-size:16.5px;margin:0 0 4px;letter-spacing:-.01em}
-.q-title .req{color:var(--danger);font-weight:600;margin-left:4px;font-size:13px}
-.q-help{font-size:13.5px;color:var(--ink-3);margin:0 0 10px}
-.opts{display:grid;gap:8px;margin-top:10px}
-.opt{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border:1px solid var(--line);border-radius:12px;cursor:pointer;
-  background:transparent;transition:border-color .15s,background .15s;min-height:48px}
-.opt:hover{border-color:var(--ink-3)}
-.opt input{margin:3px 0 0;accent-color:var(--accent);width:18px;height:18px;flex:none}
-.opt span{flex:1}
-.opt:has(input:checked){border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,transparent)}
-.scale{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px}
-.scale label{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 0;border:1px solid var(--line);border-radius:12px;cursor:pointer;font-weight:700}
-.scale input{position:absolute;opacity:0;pointer-events:none}
-.scale label:has(input:checked){border-color:var(--accent);background:var(--accent);color:var(--accent-ink)}
-.scale label:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
-.scale-legend{display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink-3);margin-top:6px}
-textarea,input[type=text]{width:100%;font:inherit;color:inherit;background:transparent;border:1px solid var(--line);border-radius:12px;padding:12px 14px}
-textarea{min-height:110px;resize:vertical}
-textarea:focus,input[type=text]:focus{outline:none;border-color:var(--accent)}
-.other-input{margin-top:6px}
-.err{color:var(--danger);font-size:13px;margin-top:8px;display:none}
-.q.invalid .err{display:block}
-.q.invalid .opts .opt,.q.invalid .scale label{border-color:color-mix(in srgb,var(--danger) 60%,var(--line))}
-.nav{position:fixed;left:0;right:0;bottom:0;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);
-  border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom))}
-.nav-in{max-width:640px;margin:0 auto;display:flex;gap:10px}
-button{font:inherit;font-weight:700;border-radius:12px;padding:14px 18px;border:1px solid var(--line);background:var(--paper);color:var(--ink);cursor:pointer;min-height:50px}
-button.primary{flex:1;background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-button:disabled{opacity:.5;cursor:default}
-button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.hidden{display:none!important}
-.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
-.done{text-align:center;padding:40px 22px}
-.done .big{font-size:44px;margin-bottom:8px}
-.notice{font-size:13px;color:var(--danger);margin-top:12px}
-a{color:var(--accent)}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header class="top">
-    <div class="brand">fineprint<small>약관 설문</small></div>
-    <div class="step-count" id="stepCount" aria-live="polite"></div>
-  </header>
-  <div class="progress" aria-hidden="true"><i id="bar"></i></div>
-
-  <form id="survey" novalidate>
-    <input class="hp" type="text" name="_hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-    <div id="steps"></div>
-  </form>
-
-  <section class="card done hidden" id="done" aria-live="polite">
-    <div class="big" aria-hidden="true">✓</div>
-    <h2>응답해 주셔서 감사합니다</h2>
-    <p class="lead">결과는 프로젝트 기록에 익명으로 정리해 공유할게요.</p>
-    <p class="lead" style="margin:0"><a href="https://github.com/Jeon-ChaeA/fineprint">fineprint 프로젝트 보러 가기</a></p>
-  </section>
-</div>
-
-<nav class="nav" id="nav">
-  <div class="nav-in">
-    <button type="button" id="prev">이전</button>
-    <button type="button" class="primary" id="next">시작하기</button>
-  </div>
-</nav>
-
-<script>
-/* 응답을 받을 Google Apps Script 웹 앱 주소. 배포 후 여기에 붙여 넣는다. */
-const ENDPOINT = "https://script.google.com/macros/s/AKfycbxRGfOE6x-oancUMKG-uDNrOA0eTSIpxq0gSlkDa-dxzxoyMfxZJ7gK5ZWhFU9A4R2I/exec";
-
-const HELP = [
-  "내 상황을 물어보면 약관에서 해당 조항을 찾아 근거와 함께 답해 주기",
-  "여러 금융사의 같은 조건을 나란히 비교해 주기",
-  "꼭 알아야 할 핵심 조건만 짧게 요약해 주기",
-  "동의하기 전에 내가 핵심 조건을 제대로 이해했는지 확인해 주기",
-  "사람 상담원에게 바로 물어볼 수 있게 연결해 주기"
-];
-
-const STEPS = [
-  { intro: true },
-  { title: "금융상품 이용 경험", qs: [
-    { id: "loan_exp", type: "radio", req: true,
-      t: "최근 3년 안에 앱이나 웹으로 대출(신용대출, 카드론, 마이너스통장 등)을 받거나 알아본 적이 있나요?",
-      o: ["받은 적 있다", "알아보기만 했다 (한도·금리 조회 등)", "없다"] },
-    { id: "products", type: "check", other: true,
-      t: "최근 3년 안에 앱으로 가입하거나 알아본 금융상품을 모두 골라 주세요.",
-      o: ["신용대출", "카드론·현금서비스", "마이너스통장", "신용카드", "보험", "적금·예금", "해당 없음"] }
-  ]},
-  { title: "약관과 상품설명서 읽기", qs: [
-    { id: "read_level", type: "scale", req: true,
-      t: "동의 버튼을 누르기 전에 약관이나 상품설명서를 얼마나 읽나요?", lo: "거의 안 읽는다", hi: "꼼꼼히 다 읽는다" },
-    { id: "skip_reasons", type: "check", other: true,
-      t: "약관을 끝까지 읽지 않는다면, 그 이유는 무엇인가요?", h: "해당하는 것을 모두 골라 주세요.",
-      o: ["너무 길다", "용어와 문장이 어렵다", "휴대폰 화면에서 글씨가 너무 작다", "어차피 동의해야 다음으로 넘어갈 수 있다",
-          "중요한 내용은 앱 화면에 요약돼 있을 거라고 생각한다", "금융사를 믿는다", "시간이 없다", "끝까지 읽는 편이다"] },
-    { id: "check_items", type: "check", other: true,
-      t: "대출이나 카드를 고를 때 직접 확인하는 조건을 모두 골라 주세요.",
-      o: ["금리", "한도", "중도상환수수료", "금리가 바뀌는 조건 (변동금리, 변경 주기)", "연체했을 때의 이자와 불이익",
-          "신용점수에 미치는 영향", "상환 방식 (원리금균등, 만기일시 등)", "부대 비용 (인지세, 보증료 등)", "거의 확인하지 않는다"] }
-  ]},
-  { title: "가입한 뒤에 알게 된 조건", qs: [
-    { id: "surprised", type: "check", other: true,
-      t: "가입하거나 이용한 뒤에야 알게 돼서 당황했거나 손해를 본 조건이 있나요?", h: "해당하는 것을 모두 골라 주세요.",
-      o: ["중도상환수수료", "금리가 오르는 조건", "연체이자나 연체 시 불이익", "신용점수 하락", "자동 연장이나 만기 조건",
-          "숨은 수수료나 부대 비용", "혜택 제외 조건 (카드 실적 등)", "보장 제외·면책 조건 (보험)", "그런 경험은 없다"] },
-    { id: "surprised_story", type: "text",
-      t: "그때 상황을 조금 더 알려 주실 수 있나요?",
-      h: "예: \"카드론을 일찍 갚으려 했는데 수수료가 있는 줄 몰랐다\". 개인정보는 빼고 적어 주세요. (선택)" }
-  ]},
-  { title: "앱의 요약 화면", qs: [
-    { id: "summary_left", type: "radio", req: true,
-      t: "일부 앱은 대출 신청 전에 핵심 내용을 카드나 요약 화면으로 보여 줍니다. 그 요약을 본 뒤에도 궁금한 점이 남았던 적이 있나요?",
-      o: ["있다", "없다, 요약으로 충분했다", "요약 화면을 본 기억이 없다"] },
-    { id: "summary_question", type: "text",
-      t: "요약을 보고도 남았던 궁금증은 무엇이었나요?",
-      h: "예: \"3년 안에 갚으면 정확히 얼마를 내야 하는지\", \"한 번 연체하면 어떻게 되는지\" (선택)" }
-  ]},
-  { title: "어떤 도움이 있으면 좋을까요", qs: [
-    { id: "help_wanted", type: "check", other: true,
-      t: "약관을 이해하는 데 어떤 도움이 있으면 좋겠나요?", h: "해당하는 것을 모두 골라 주세요.",
-      o: HELP.concat(["딱히 필요 없다"]) },
-    { id: "help_top", type: "radio", req: true, other: true,
-      t: "그중 하나만 고른다면 무엇인가요?", o: HELP },
-    { id: "trust_needs", type: "check", other: true,
-      t: "AI가 약관을 설명해 준다면, 그 답을 믿으려면 무엇이 필요할까요?", h: "해당하는 것을 모두 골라 주세요.",
-      o: ["약관 원문의 조항 번호와 문장을 함께 보여 주기", "모르는 건 모른다고 말하기", "금융사나 공식 기관이 확인한 정보라는 표시",
-          "틀렸을 때 사람에게 다시 확인할 방법", "AI 설명은 믿기 어렵다"] }
-  ]},
-  { title: "응답자 정보", sub: "통계용이에요. 답하지 않아도 괜찮아요.", last: true, qs: [
-    { id: "age", type: "radio", t: "연령대", o: ["20대", "30대", "40대", "50대 이상", "응답하지 않음"] },
-    { id: "job", type: "radio", t: "하시는 일", o: ["직장인", "자영업·프리랜서", "학생", "금융업 종사자", "그 외", "응답하지 않음"] }
-  ]},
-];
-
-const $ = (s, el = document) => el.querySelector(s);
-const stepsEl = $("#steps"), form = $("#survey");
-const total = STEPS.length - 1;
-let cur = 0, sending = false;
-
-function esc(s){ const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
-
-function renderIntro(){
-  return `<section class="card" data-step="0">
-    <h1>금융 약관,<br><span class="mark">정말 읽고</span> 동의하시나요?</h1>
-    <p class="lead">대출·카드·보험에 가입할 때 약관과 상품설명서를 어떻게 읽는지 알아보는 <b>5분 설문</b>이에요.
-    금융 약관을 근거와 함께 읽어 주는 AI 프로젝트 <b>fineprint</b>를 위한 조사예요.</p>
+<main class="wrap">
+  <div class="brand">fineprint<small>금융 약관 설문</small></div>
+  <section class="card">
+    <h1>설문이 <span class="mark">마감</span>되었어요</h1>
+    <p class="lead">참여해 주신 모든 분께 감사드려요. 2026년 10월 8일에 응답 접수를 마쳤어요.
+    모아 주신 답변은 금융 약관을 근거와 함께 읽어 주는 AI, <b>fineprint</b>의 첫 기능을 정하는 데 쓰였어요.</p>
+    <a class="btn" href="https://github.com/Jeon-ChaeA/fineprint/blob/main/research/survey-results.md">설문 결과 보기</a>
     <div class="fine">
-      <p>응답은 익명으로 처리되며, 통계와 익명 인용으로만 사용합니다.</p>
-      <p>이름, 계좌번호, 신용점수 같은 개인정보는 적지 말아 주세요.</p>
-      <p>이 설문은 특정 금융사와 관계가 없고, 금융상품을 권유하지 않습니다.</p>
+      <p>응답은 익명으로 처리했고, 공개 자료에는 집계 결과와 익명 인용만 담았어요.</p>
+      <p>이 설문은 금융상품을 권유하지 않아요.</p>
     </div>
-  </section>`;
-}
-
-function renderQ(q){
-  const req = q.req ? `<span class="req">필수</span>` : "";
-  const help = q.h ? `<p class="q-help">${esc(q.h)}</p>` : "";
-  let body = "";
-  if (q.type === "radio" || q.type === "check"){
-    const kind = q.type === "radio" ? "radio" : "checkbox";
-    body = `<div class="opts">` + q.o.map(o =>
-      `<label class="opt"><input type="${kind}" name="${q.id}" value="${esc(o)}"><span>${esc(o)}</span></label>`).join("");
-    if (q.other) body += `<label class="opt"><input type="${kind}" name="${q.id}" value="__other"><span>기타</span></label>
-      <input type="text" class="other-input hidden" name="${q.id}__other" maxlength="200" placeholder="직접 적어 주세요">`;
-    body += `</div>`;
-  } else if (q.type === "scale"){
-    body = `<div class="scale">` + [1,2,3,4,5].map(n =>
-      `<label><input type="radio" name="${q.id}" value="${n}">${n}</label>`).join("") +
-      `</div><div class="scale-legend"><span>1 · ${esc(q.lo)}</span><span>5 · ${esc(q.hi)}</span></div>`;
-  } else if (q.type === "text"){
-    body = `<textarea name="${q.id}" maxlength="1500"></textarea>`;
-  }
-  return `<div class="q" data-q="${q.id}"><p class="q-title">${esc(q.t)}${req}</p>${help}${body}
-    <p class="err">이 질문에 답해 주세요.</p></div>`;
-}
-
-function render(){
-  stepsEl.innerHTML = STEPS.map((s, i) => i === 0 ? renderIntro() :
-    `<section class="card hidden" data-step="${i}">
-      <h2>${i}. ${esc(s.title)}</h2>${s.sub ? `<p class="lead">${esc(s.sub)}</p>` : ""}
-      ${s.qs.map(renderQ).join("")}
-      ${s.last ? `<p class="notice hidden" id="sendErr"></p>` : ""}
-    </section>`).join("");
-}
-
-function values(name){ return [...form.querySelectorAll(`[name="${name}"]:checked`)].map(i => i.value); }
-
-function answerOf(q){
-  if (q.type === "text") return (form.elements[q.id].value || "").trim();
-  const v = values(q.id).map(x => x === "__other" ? "기타: " + (form.elements[q.id + "__other"].value || "").trim() : x);
-  return v.join(" | ");
-}
-
-function validate(i){
-  const s = STEPS[i]; if (!s.qs) return true;
-  let ok = true, first = null;
-  s.qs.forEach(q => {
-    const box = $(`[data-q="${q.id}"]`);
-    let bad = !!(q.req && !answerOf(q));
-    box.classList.toggle("invalid", bad);
-    if (bad){ ok = false; first = first || box; }
-  });
-  if (first) first.scrollIntoView({ behavior: "smooth", block: "center" });
-  return ok;
-}
-
-function show(i){
-  cur = i;
-  document.querySelectorAll("[data-step]").forEach(el => el.classList.toggle("hidden", +el.dataset.step !== i));
-  $("#prev").classList.toggle("hidden", i === 0);
-  $("#next").textContent = i === 0 ? "시작하기" : (i === total ? "제출하기" : "다음");
-  $("#stepCount").textContent = i === 0 ? "약 5분" : `${i} / ${total}`;
-  $("#bar").style.width = (i / total * 100) + "%";
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
-async function submit(){
-  if (sending) return;
-  const err = $("#sendErr");
-  if (!ENDPOINT){ err.textContent = "아직 응답을 받을 준비가 되지 않았어요. 잠시 후 다시 시도해 주세요."; err.classList.remove("hidden"); return; }
-  sending = true; $("#next").disabled = true; $("#next").textContent = "보내는 중…";
-  const data = { _hp: form.elements._hp.value, submitted_at: new Date().toISOString(), ua_mobile: /Mobi/i.test(navigator.userAgent) ? "mobile" : "desktop" };
-  STEPS.forEach(s => (s.qs || []).forEach(q => { data[q.id] = answerOf(q); }));
-  try {
-    await fetch(ENDPOINT, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(data) });
-    form.classList.add("hidden"); $("#nav").classList.add("hidden");
-    $("#done").classList.remove("hidden"); $("#bar").style.width = "100%"; $("#stepCount").textContent = "완료";
-  } catch (e) {
-    err.textContent = "전송에 실패했어요. 인터넷 연결을 확인하고 다시 눌러 주세요.";
-    err.classList.remove("hidden");
-    $("#next").disabled = false; $("#next").textContent = "제출하기"; sending = false;
-  }
-}
-
-render(); show(0);
-
-form.addEventListener("change", e => {
-  const t = e.target;
-  if (t.value === "__other" || t.type === "radio" || t.type === "checkbox"){
-    const other = form.elements[t.name + "__other"];
-    if (other) other.classList.toggle("hidden", !values(t.name).includes("__other"));
-    if (t.value === "__other" && t.checked && other) other.focus();
-  }
-  const box = t.closest(".q"); if (box) box.classList.remove("invalid");
-});
-form.addEventListener("submit", e => e.preventDefault());
-$("#next").addEventListener("click", () => {
-  if (cur === 0) return show(1);
-  if (!validate(cur)) return;
-  if (cur === total) return submit();
-  show(cur + 1);
-});
-$("#prev").addEventListener("click", () => cur > 0 && show(cur - 1));
-</script>
+  </section>
+</main>
 </body>
 </html>

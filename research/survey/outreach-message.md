@@ -1,5 +1,7 @@
 # 설문 홍보 문구
 
+> 2026-10-08 설문 마감. 아래 문구는 기록으로 남겨 둔다.
+
 설문 링크: https://fineprint-survey.netlify.app/
 
 예비 링크(GitHub Pages): https://jeon-chaea.github.io/fineprint/survey/ (일부 회사 네트워크에서 `github.io`가 차단돼 Netlify 주소를 기본으로 쓴다)

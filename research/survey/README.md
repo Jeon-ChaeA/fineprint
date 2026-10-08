@@ -15,6 +15,8 @@
 
 ## 현재 상태
 
+- **2026-10-08 마감.** 응답 39건. 설문 주소(Netlify, GitHub Pages)에는 마감 안내 페이지를 올렸다. [결과](../survey-results.md)
+- 마감 전 설문 페이지 원본: [survey/index.html @ 93be8bd](https://github.com/Jeon-ChaeA/fineprint/blob/93be8bd78a880295b2903705ee0454b65fb17eb6/survey/index.html)
 - 응답 시트: 개인 Google 계정의 `fineprint 설문 응답` (비공개)
 - 수집 스크립트: Apps Script 프로젝트 `fineprint survey endpoint`, 웹 앱으로 배포 (실행: 나, 액세스: 모든 사용자)
 - 설문 페이지의 `ENDPOINT`에 웹 앱 URL 연결 완료
