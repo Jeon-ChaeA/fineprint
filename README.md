@@ -51,7 +51,7 @@
 - [x] 사용자 설문 페이지 공개 ([설문](https://fineprint-survey.netlify.app/), [설계와 설정](research/survey/README.md))
 - [x] 설문 응답 39건 수집과 결과 정리 ([결과](research/survey-results.md))
 - [x] 첫 기능 방향 결정: 근거가 붙은 불리한 조건 요약 + 조항 근거 답변 ([D-008](docs/decision-log.md))
-- [ ] 공시 약관 수집처 확인
+- [x] 공시 약관 수집처 확인 ([수집처](research/terms-sources.md))
 - [ ] 문제 정의 1페이지 작성
 
 ## 문서
@@ -67,6 +67,7 @@
 | [devlog/](docs/devlog/) | 날짜별 작업 기록 |
 | [research/app-observation.md](research/app-observation.md) | 금융 앱 4곳 신용대출 화면 관찰 |
 | [research/survey-results.md](research/survey-results.md) | 사용자 설문 결과 (39명) |
+| [research/terms-sources.md](research/terms-sources.md) | 신용대출 공시 약관 수집처 (은행 3곳) |
 | [research/survey/](research/survey/) | 사용자 설문 설계, 응답 수집 설정, 홍보 문구 |
 
 ## 데이터 원칙
