@@ -1,0 +1,127 @@
+{
+  "retrieved_at": "2026-10-08",
+  "note": "원문 PDF는 data/raw/에 받아 두고 레포에는 올리지 않는다. sha256으로 받은 파일이 이 버전인지 확인한다.",
+  "documents": [
+    {
+      "id": "toss_basic",
+      "bank": "토스뱅크",
+      "layer": 1,
+      "title": "은행여신거래기본약관(가계용)",
+      "effective": "2024-10-17",
+      "file": "fineprint_toss_basic_2770.pdf",
+      "url": "https://api.tossbank.com/api-public/disclosure/attachment/document/2770",
+      "sha256": "279c403929c1771030ef2689ed48f0172fa60694abb1a86c235cebb4398d5430",
+      "bytes": 194279
+    },
+    {
+      "id": "toss_contract",
+      "bank": "토스뱅크",
+      "layer": 2,
+      "title": "대출거래약정서 (가계용)",
+      "effective": "2026-07-30",
+      "file": "fineprint_toss_contract_3934.pdf",
+      "url": "https://api.tossbank.com/api-public/disclosure/attachment/document/3934",
+      "sha256": "422ad2e00ba50b5efd23fb5e195e83eeaad9bb8e302a0cab02d3a95479029892",
+      "bytes": 77421
+    },
+    {
+      "id": "toss_addendum",
+      "bank": "토스뱅크",
+      "layer": 2,
+      "title": "대출거래 추가약정서 (가계용)",
+      "effective": "2025-10-31",
+      "file": "fineprint_toss_addendum_3942.pdf",
+      "url": "https://api.tossbank.com/api-public/disclosure/attachment/document/3942",
+      "sha256": "95d8be4fbe9df90f7d134e5c02ff6e66aeb51ac1e49a1445c026472b373ed5a7",
+      "bytes": 74449
+    },
+    {
+      "id": "toss_manual",
+      "bank": "토스뱅크",
+      "layer": 3,
+      "title": "가계대출상품설명서",
+      "effective": "2025-09-22",
+      "file": "fineprint_toss_manual_3396.pdf",
+      "url": "https://api.tossbank.com/api-public/disclosure/attachment/document/3396",
+      "sha256": "e745f18adf91e5423cf3674cd4de832bc928fed1b8fd806ce99fada1fc89581c",
+      "bytes": 552872
+    },
+    {
+      "id": "kakao_basic",
+      "bank": "카카오뱅크",
+      "layer": 1,
+      "title": "은행여신거래기본약관",
+      "effective": "2024-10-17",
+      "file": "fineprint_kakao_basic.pdf",
+      "url": "https://og.kakaobank.io/download/340ba1d0-0c9e-4de4-a59a-f9c64c435573",
+      "sha256": "fce4a17d940b2e342f5622ba49ef1b176853858eb2f03cae6e0028e401d3bfd4",
+      "bytes": 490673
+    },
+    {
+      "id": "kakao_contract",
+      "bank": "카카오뱅크",
+      "layer": 2,
+      "title": "대출거래 약정서",
+      "effective": "2026-10-07",
+      "file": "fineprint_kakao_contract.pdf",
+      "url": "https://og.kakaobank.io/download/589b8883-d34e-4139-bf94-8ce5558465bc",
+      "sha256": "4ecb60ae3277c14a034bb8621c14c468e07238eaf495939a73cd43799a149da6",
+      "bytes": 363896
+    },
+    {
+      "id": "kakao_addendum_usage",
+      "bank": "카카오뱅크",
+      "layer": 2,
+      "title": "대출거래 추가약정서(신용대출의 사후 용도관리 추가약정용)",
+      "effective": "2021-09-24",
+      "file": "fineprint_kakao_addendum_usage.pdf",
+      "url": "https://og.kakaobank.io/download/cd20c825-bb64-42cd-bba0-80addfeb47c5",
+      "sha256": "1fc107244f5d575fa230e275aed484c11c1a6c03f53a5273759f7601f719492e",
+      "bytes": 279800
+    },
+    {
+      "id": "kakao_manual",
+      "bank": "카카오뱅크",
+      "layer": 3,
+      "title": "가계대출 상품설명서",
+      "effective": "2026-01-02",
+      "file": "fineprint_kakao_manual.pdf",
+      "url": "https://og.kakaobank.io/download/889cab48-ccd7-445a-a0ab-5d7881a9e9ed",
+      "sha256": "3ffcc59d5d4580978647a59c07821af88f34b85dca155b75728abf37f507f0fc",
+      "bytes": 840623
+    },
+    {
+      "id": "hana_basic",
+      "bank": "하나은행",
+      "layer": 1,
+      "title": "은행여신거래기본약관(가계용)",
+      "effective": "2024-10-17",
+      "file": "fineprint_hana_basic_20241017.pdf",
+      "url": "https://image.kebhana.com/cont/download/documents/provide/b000003061031_20241017.pdf",
+      "sha256": "0c56712d2c77bce1bdb9b2f005718f837096df9e1d1d2174664ce106c6bd444d",
+      "bytes": 131360
+    },
+    {
+      "id": "hana_manual",
+      "bank": "하나은행",
+      "layer": 3,
+      "title": "대출상품설명서(권유용)",
+      "effective": "2023-05-18",
+      "file": "fineprint_hana_manual_20230518.pdf",
+      "url": "https://image.kebhana.com/cont/download/documents/provide/0000003060148_20230518.pdf",
+      "sha256": "9df6c5432c7ba3c4bc591712acdc34d05335d3b36d06c94d59676e917d71157c",
+      "bytes": 399168
+    },
+    {
+      "id": "hana_addendum_rate",
+      "bank": "하나은행",
+      "layer": 2,
+      "title": "추가약정서(가계대출 금리감면용)",
+      "effective": "2026-06-30",
+      "file": "fineprint_hana_addendum_rate_20260630.pdf",
+      "url": "https://image.kebhana.com/cont/download/documents/provide/0000005060171_20260630.pdf",
+      "sha256": "bee10e1fe9145b3c98a18e624107f1496282c298f6ed862893ecbd4b0fe5f1b4",
+      "bytes": 170303
+    }
+  ]
+}
