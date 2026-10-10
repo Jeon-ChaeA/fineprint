@@ -1,6 +1,6 @@
-"""근거 인용 에이전트 1차.
+"""근거 인용 에이전트 (1.1).
 
-흐름: 질문 → 조항 검색 → 같은 조의 다른 항·참조된 조 붙이기 → 교차 참조 확인
+흐름: 질문 → 층별 조항 검색 → 같은 조의 다른 항·짧은 문서 전체·참조된 기본약관 조 붙이기 → 교차 참조 확인
      → 근거 목록과 함께 LLM에 묻기 → 답이 댄 근거가 실제로 준 근거인지 확인.
 
 LLM이 하는 일은 "준 근거 안에서 답 쓰기"뿐이다. 검색, 교차 참조 확인, 인용 검증은 코드가 한다.
@@ -28,7 +28,10 @@ SYSTEM = """너는 fineprint다. 한국 은행 신용대출 약관을 읽고, �
    "확인 필요"라고 쓰며, 실제로 내용이 맞는 조를 함께 댄다. 질문과 관계없는 참조의 경고는 무시한다.
 5. 어느 은행·상품이 낫다고 권하거나 고르게 하지 않는다. 비교를 원하면 각 은행 문서에 적힌 사실만 나란히 쓴다.
 6. 질문한 은행의 문서를 우선한다. 예외·단서(다만, 단, 제외)가 있으면 빠뜨리지 않는다.
-7. 짧게 쓴다. 결론 한 문장 → 조건·예외 → 필요하면 확인할 점. 5문장 이내.
+7. 결과까지 쓴다. 조건을 어기거나, 갚지 못하거나, 거절되면 그다음 어떻게 되는지가 근거에 있으면 한 문장으로 덧붙인다.
+8. 질문이 특정 문서(예: 약정서)를 묻는데 [수집한 문서]에 없으면 "수집한 자료에 없어 확인 필요"라고 쓰고,
+   수집한 다른 문서로 확인되는 내용만 덧붙인다. 다른 문서 내용을 그 문서의 조항처럼 쓰지 않는다.
+9. 짧게 쓴다. 결론 한 문장 → 조건·예외 → 결과 → 필요하면 확인할 점. 6문장 이내.
 
 출력은 JSON 하나만:
 {"status": "answered" | "cannot_judge" | "check_needed", "answer": "답 본문(근거 번호 포함)", "citations": ["C1", "C3"]}
@@ -42,11 +45,16 @@ class Context:
     banks: list[str]
     chunks: list[Chunk]
     warnings: list[crossref.Warning] = field(default_factory=list)
+    inventory: dict[str, list[str]] = field(default_factory=dict)  # 은행 → 수집한 문서 이름
 
     def render(self) -> str:
         lines = [f"[질문] {self.question}"]
         if self.banks:
             lines.append(f"[질문 대상 은행] {', '.join(self.banks)}")
+        if self.inventory:
+            lines.append("[수집한 문서]")
+            for bank, docs in self.inventory.items():
+                lines.append(f"- {bank}: {'; '.join(docs)}")
         lines.append("\n[근거 목록]")
         for i, c in enumerate(self.chunks, 1):
             lines.append(f"[C{i}] {c.label()}\n{c.text.strip()}\n")
@@ -72,11 +80,22 @@ class Answer:
         return self.__dict__
 
 
+SHORT_DOC = 3000   # 이보다 짧은 문서(추가약정서 등)는 한 조각만 걸려도 통째로 넣는다
+REF_PER_ARTICLE = 2  # 참조를 따라 넣는 기본약관 조각 수 (한 조당, 앞쪽 항부터)
+
+
 class Agent:
-    def __init__(self, k: int = 8, max_chunks: int = 18):
+    def __init__(self, max_chunks: int = 26):
         self.chunks = load()
         self.index = Index(self.chunks)
-        self.k, self.max_chunks = k, max_chunks
+        self.max_chunks = max_chunks
+        self.doc_chunks: dict[str, list[Chunk]] = {}
+        for c in self.chunks:
+            self.doc_chunks.setdefault(c.doc, []).append(c)
+        self.doc_len = {d: sum(len(c.text) for c in cs) for d, cs in self.doc_chunks.items()}
+        self.inventory: dict[str, list[str]] = {}
+        for d, cs in self.doc_chunks.items():
+            self.inventory.setdefault(cs[0].bank, []).append(f"{cs[0].title}({cs[0].version})")
         self.basic: dict[str, dict[str, str]] = {}
         self.basic_chunks: dict[tuple[str, str], list[Chunk]] = {}
         for c in self.chunks:
@@ -87,8 +106,30 @@ class Agent:
     # 1. 검색과 근거 묶기 -------------------------------------------------
     def context(self, question: str, banks: list[str] | None = None) -> Context:
         banks = banks or detect_banks(question)
-        hits = [c for c, _ in self.index.search(question, banks=banks, k=self.k)]
-        chunks = self.index.with_siblings(hits)
+        hits = [c for c, _ in self.index.search_layered(question, banks=banks)]
+        # 우선순위대로 담고 마지막에 자른다: 검색 결과(+짧은 문서 전체, 참조된 기본약관 조) → 같은 조의 다른 항
+        chunks: list[Chunk] = []
+
+        def add(c: Chunk):
+            if c not in chunks:
+                chunks.append(c)
+
+        for c in hits:
+            add(c)
+            # 짧은 문서는 통째로, 걸린 조각 바로 뒤에: 목적 조항만 걸리고 의무 조항을 놓치는 일을 막는다(1차 평가 Q25)
+            if self.doc_len[c.doc] <= SHORT_DOC:
+                for x in self.doc_chunks[c.doc]:
+                    add(x)
+            # 참조 따라가기: 약정서·설명서가 "기본약관 제N조"를 가리키면 그 조를 바로 뒤에 넣는다(1차 평가 Q23)
+            if c.layer != 1:
+                for m in crossref.REF.finditer(c.text):
+                    art = f"제{m.group(1)}조" + (f"의{m.group(2)}" if m.group(2) else "")
+                    for b in self.basic_chunks.get((c.bank, art), [])[:REF_PER_ARTICLE]:
+                        add(b)
+        # 같은 조의 다른 항: 예외는 대개 같은 조의 다른 항이나 단서에 있다
+        for c in self.index.with_siblings(hits):
+            add(c)
+        chunks = chunks[: self.max_chunks]
         warnings = []
         for c in list(chunks):
             for w in crossref.check(c, self.basic.get(c.bank, {})):
@@ -98,8 +139,8 @@ class Agent:
                     for b in self.basic_chunks.get((c.bank, art), []):
                         if b not in chunks:
                             chunks.append(b)
-        chunks = chunks[: self.max_chunks + 4 * len(warnings)]
-        return Context(question, banks, chunks, warnings)
+        inv = {b: self.inventory[b] for b in (banks or sorted({c.bank for c in chunks}))}
+        return Context(question, banks, chunks, warnings, inv)
 
     # 2. 답 만들기 ---------------------------------------------------------
     def prompt(self, ctx: Context) -> tuple[str, str]:

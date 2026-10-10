@@ -98,6 +98,31 @@ class Index:
         scored.sort(key=lambda x: -x[1])
         return scored[:k]
 
+    def search_layered(self, question: str, banks: list[str] | None = None,
+                       quotas: dict[int, int] | None = None) -> list[tuple[Chunk, float]]:
+        """층(기본약관·약정서·설명서)마다 정해진 수만큼 가져와 점수순으로 합친다.
+
+        한 층(대개 긴 설명서)이 근거 자리를 다 차지하면, 다른 층에 있는 예외 조항을 놓친다(1차 평가 Q11, Q18, Q23).
+        """
+        quotas = quotas or {1: 4, 2: 4, 3: 4}
+        allhits = self.search(question, banks=banks, k=len(self.chunks))
+        out = []
+        for layer, n in quotas.items():
+            units: set = set()
+            for h in allhits:
+                c = h[0]
+                if c.layer != layer:
+                    continue
+                # 같은 조(또는 같은 쪽)에서 나온 조각은 한 단위로 센다. 설명서 한 쪽이 여러 조각으로 나뉘어 자리를 독차지하지 않게
+                unit = (c.doc, c.article or c.page)
+                if unit not in units:
+                    if len(units) >= n:
+                        continue
+                    units.add(unit)
+                out.append(h)
+        out.sort(key=lambda x: -x[1])
+        return out
+
     def with_siblings(self, hits: list[Chunk]) -> list[Chunk]:
         """찾은 항과 같은 조의 다른 항도 붙인다. 예외는 대개 같은 조의 다른 항이나 단서에 있다."""
         out, seen = [], set()

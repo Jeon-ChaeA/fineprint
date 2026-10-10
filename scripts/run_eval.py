@@ -33,6 +33,15 @@ SAME_PAGE = {("hana_manual", 1): 4, ("hana_manual", 2): 5, ("hana_manual", 3): 6
 SAME_PAGE.update({(d, b): a for (d, a), b in list(SAME_PAGE.items())})
 
 
+def advises(text: str) -> bool:
+    """권유 표현이 있는가. "더 낫다고 말할 수 없다"처럼 부정하는 문장은 빼고 센다."""
+    for m in ADVICE.finditer(text):
+        after = text[m.end(): m.end() + 20]
+        if not re.search(r"수\s*[는가]?\s*없|않", after):
+            return True
+    return False
+
+
 def key(c: dict) -> tuple:
     if "article" in c:
         return (c["doc"], c["article"])
@@ -50,6 +59,28 @@ def gold_keys(q: dict, with_related: bool = False) -> set:
     return out
 
 
+def context_keys(chunk_ids: list[str]) -> set:
+    """프롬프트에 넣은 조각 id → (문서, 조) 또는 (문서, 쪽)"""
+    out = set()
+    for cid in chunk_ids:
+        doc, rest = cid.split(":", 1)
+        if rest.startswith("p") and "#" in rest:
+            out.add((doc, int(rest[1:].split("#")[0])))
+        else:
+            out.add((doc, re.match(r"제\d+조(?:의\d+)?", rest).group(0)))
+    return out
+
+
+def recall(q: dict, chunk_ids: list[str]) -> tuple[int, int]:
+    """정답 근거(citations) 중 근거 목록에 들어간 수. 하나은행 설명서 중복 쪽은 같은 것으로 본다."""
+    have = context_keys(chunk_ids)
+    hit = 0
+    for c in q["citations"]:
+        k = key(c)
+        hit += k in have or (k in SAME_PAGE and (k[0], SAME_PAGE[k]) in have)
+    return hit, len(q["citations"])
+
+
 def load_eval(path):
     return [json.loads(l) for l in open(path, encoding="utf-8")]
 
@@ -58,6 +89,7 @@ def cmd_prompts(args):
     agent = Agent()
     run = Path(args.run)
     run.mkdir(parents=True, exist_ok=True)
+    got = total = full = n = 0
     with open(run / "prompts.jsonl", "w", encoding="utf-8") as f:
         for q in load_eval(args.eval):
             banks = None if q["bank"] == "공통" else [q["bank"]]
@@ -65,10 +97,14 @@ def cmd_prompts(args):
                 banks = None  # 두 은행을 묻는 질문은 질문에서 은행을 찾는다
             ctx = agent.context(q["question"], banks)
             system, user = agent.prompt(ctx)
+            if q["citations"]:
+                h, t = recall(q, [c.id for c in ctx.chunks])
+                got, total, full, n = got + h, total + t, full + (h == t), n + 1
             f.write(json.dumps({"id": q["id"], "system": system, "user": user,
                                 "chunks": [c.id for c in ctx.chunks],
                                 "warnings": [w.text() for w in ctx.warnings]}, ensure_ascii=False) + "\n")
     print(f"프롬프트 {len(load_eval(args.eval))}개 → {run / 'prompts.jsonl'}")
+    print(f"근거 재현율: 정답 근거 {got}/{total}개가 근거 목록에 들어감, 정답 근거를 모두 가져온 문항 {full}/{n}")
 
 
 def cmd_generate(args):
@@ -111,7 +147,7 @@ def cmd_score(args):
         m["invalid"] += len(ans.invalid)
         if ans.invalid:
             notes.append(f"없는 근거 {ans.invalid}")
-        if ADVICE.search(text):
+        if advises(text):
             m["advice"] += 1
             notes.append("권유 표현")
         verdict = ""
@@ -179,14 +215,29 @@ def cmd_score(args):
     print(f"→ {out}")
 
 
+def cmd_recall(args):
+    """이미 만든 prompts.jsonl의 근거 재현율만 다시 센다 (다른 버전과 비교용)"""
+    qs = {q["id"]: q for q in load_eval(args.eval)}
+    got = total = full = n = 0
+    for line in open(Path(args.run) / "prompts.jsonl", encoding="utf-8"):
+        p = json.loads(line)
+        q = qs[p["id"]]
+        if q["citations"]:
+            h, t = recall(q, p["chunks"])
+            got, total, full, n = got + h, total + t, full + (h == t), n + 1
+            if h < t:
+                print(f"  {p['id']} {h}/{t}")
+    print(f"근거 재현율: {got}/{total} ({got / total:.0%}), 정답 근거를 모두 가져온 문항 {full}/{n}")
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["prompts", "generate", "score"])
+    ap.add_argument("cmd", choices=["prompts", "generate", "score", "recall"])
     ap.add_argument("--run", default=str(ROOT / "runs" / "v1"))
     ap.add_argument("--eval", default=str(ROOT / "eval" / "credit-loan-v1.jsonl"))
     ap.add_argument("--model", default=None)
     args = ap.parse_args()
-    {"prompts": cmd_prompts, "generate": cmd_generate, "score": cmd_score}[args.cmd](args)
+    {"prompts": cmd_prompts, "generate": cmd_generate, "score": cmd_score, "recall": cmd_recall}[args.cmd](args)
 
 
 if __name__ == "__main__":

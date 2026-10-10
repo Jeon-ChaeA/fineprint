@@ -55,7 +55,7 @@ def main():
             p = c.get("paragraph")
             if p and p in "①②③④⑤⑥⑦⑧⑨⑩" and p not in [x["paragraph"] for x in u.get("paragraphs", [])]:
                 issues.append(f"{c['doc']} {c['article']} {p} 없음")
-            if p and p.isdigit():
+            if p and p.isascii() and p.isdigit():
                 unverified += 1  # 숫자 항(토스뱅크 약정서)은 파싱 결과에서 나뉘지 않아 조 단위까지만 검증된다
             if i == 0 and q.get("evidence") and norm(q["evidence"]) not in norm(u["text"]):
                 issues.append(f"evidence가 {c['doc']} {c.get('article') or 'p.' + str(c.get('page'))}에 없음")
