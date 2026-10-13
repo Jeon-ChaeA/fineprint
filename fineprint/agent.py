@@ -1,7 +1,10 @@
-"""근거 인용 에이전트 (1.1).
+"""근거 인용 에이전트 (1.2).
 
 흐름: 질문 → 층별 조항 검색 → 같은 조의 다른 항·짧은 문서 전체·참조된 기본약관 조 붙이기 → 교차 참조 확인
      → 근거 목록과 함께 LLM에 묻기 → 답이 댄 근거가 실제로 준 근거인지 확인.
+
+1.2에서 점검 단계(초안 → 근거 목록과 대조해 빠진 예외·결과·숫자 보충, 다른 제도 섞임, 원문 표현 → 최종)를 만들었다.
+평가해 보니 새 문항에서는 나아지지 않고 비용(호출 2배, 답 길이 1.6배)만 늘어 기본값은 끈다(eval/results-v1.2.md).
 
 LLM이 하는 일은 "준 근거 안에서 답 쓰기"뿐이다. 검색, 교차 참조 확인, 인용 검증은 코드가 한다.
 그래서 LLM이 근거에 없는 조항을 지어내면 코드에서 걸러진다.
@@ -36,6 +39,28 @@ SYSTEM = """너는 fineprint다. 한국 은행 신용대출 약관을 읽고, �
 출력은 JSON 하나만:
 {"status": "answered" | "cannot_judge" | "check_needed", "answer": "답 본문(근거 번호 포함)", "citations": ["C1", "C3"]}
 - citations에는 답이 실제로 기대는 근거만, 중요한 순서로 넣는다.
+"""
+
+
+REVIEW = """너는 fineprint의 점검 담당이다. 근거 목록, 질문, 초안 답을 받고 초안을 고친 최종 답을 낸다.
+근거 목록 밖의 지식은 쓰지 않는다. 초안 규칙(근거 번호, 판단 불가, 확인 필요, 권유 금지)은 그대로 지킨다.
+
+다음 네 가지를 근거 목록과 하나씩 대조한다.
+1. 빠진 것: 질문에 답하는 데 필요한데 초안에 없는 것을 근거 목록에서 찾는다.
+   - 예외·단서 (다만, 단, 제외, ~미만이면)
+   - 결과 (어기거나 갚지 못하거나 거절되면 그다음 어떻게 되는가)
+   - 절차·기한 (서면 통지, 며칠 이상, 언제부터)
+   - 숫자 (금액, 비율, 기간). 근거에 계산 재료(세액표, 요율)가 있으면 질문 상황에 맞춰 계산해 쓴다
+2. 섞인 것: 이름이 비슷한 다른 제도·다른 문서의 내용을 질문한 제도처럼 쓰지 않았는가.
+   다른 제도라면 빼거나 "별개 제도"라고 구분한다.
+3. 틀린 것: 기간·기준일·금액·요건 문구가 근거 원문과 다른 곳을 원문 표현으로 고친다.
+4. 판단 불가 문항: "판단할 수 없다"는 결론은 유지하되, 근거에 있는 판단 기준·절차·결과는 덧붙인다.
+   근거에 실제로 있는 조항을 "없다"고 쓰지 않았는지 확인한다.
+
+고칠 것이 없으면 초안을 그대로 낸다. 문장은 7문장 이내로 유지한다.
+
+출력은 JSON 하나만:
+{"status": "...", "answer": "최종 답(근거 번호 포함)", "citations": ["C1", ...], "changes": ["고친 점을 짧게", ...]}
 """
 
 
@@ -146,6 +171,10 @@ class Agent:
     def prompt(self, ctx: Context) -> tuple[str, str]:
         return SYSTEM, ctx.render()
 
+    def review_prompt(self, ctx: Context, draft: str) -> tuple[str, str]:
+        """점검 단계 프롬프트: 같은 근거 목록 + 초안"""
+        return REVIEW, ctx.render() + "\n\n[초안 답]\n" + draft.strip()
+
     def parse(self, ctx: Context, raw: str) -> Answer:
         m = re.search(r"\{.*\}", raw, re.S)
         try:
@@ -178,13 +207,18 @@ class Agent:
         client = anthropic.Anthropic()
         msg = client.messages.create(
             model=model or os.environ.get("FINEPRINT_MODEL", "claude-sonnet-4-5"),
-            max_tokens=800,
+            max_tokens=1200,
             system=system,
             messages=[{"role": "user", "content": user}],
         )
         return msg.content[0].text
 
-    def ask(self, question: str, banks: list[str] | None = None, model: str | None = None) -> Answer:
+    def ask(self, question: str, banks: list[str] | None = None, model: str | None = None,
+            review: bool = False) -> Answer:
         ctx = self.context(question, banks)
         system, user = self.prompt(ctx)
+        draft = self.generate(system, user, model)
+        if not review:
+            return self.parse(ctx, draft)
+        system, user = self.review_prompt(ctx, draft)
         return self.parse(ctx, self.generate(system, user, model))

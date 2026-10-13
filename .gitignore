@@ -7,3 +7,4 @@ runs/*/batch*.jsonl
 runs/*/answers[0-9].jsonl
 runs/*/ai_grades.json
 runs/*/grading.new.md
+runs/*/review_prompts.jsonl

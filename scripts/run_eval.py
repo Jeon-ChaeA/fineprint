@@ -8,6 +8,10 @@
     #    키가 없으면 runs/v1/prompts.jsonl로 다른 방법으로 답을 만들어
     #    runs/v1/answers.jsonl ({"id": "Q01", "raw": "..."} 한 줄씩)에 넣는다.
 
+    # 2-1) (1.2) 점검 단계: 초안 답이 있는 실행에서 점검 프롬프트를 만든다
+    python scripts/run_eval.py review --from runs/v1.1 --run runs/v1.2
+    ANTHROPIC_API_KEY=... python scripts/run_eval.py generate --run runs/v1.2 --stage review
+
     # 3) 채점
     python scripts/run_eval.py score --run runs/v1
 
@@ -107,10 +111,32 @@ def cmd_prompts(args):
     print(f"근거 재현율: 정답 근거 {got}/{total}개가 근거 목록에 들어감, 정답 근거를 모두 가져온 문항 {full}/{n}")
 
 
+def cmd_review(args):
+    """초안 실행(--from)의 근거 목록과 답으로 점검 프롬프트를 만든다. 근거 목록은 그대로 물려받는다."""
+    agent = Agent()
+    src, run = Path(args.src), Path(args.run)
+    run.mkdir(parents=True, exist_ok=True)
+    qs = {q["id"]: q for q in load_eval(args.eval)}
+    by_id = {c.id: c for c in agent.chunks}
+    prompts = [json.loads(l) for l in open(src / "prompts.jsonl", encoding="utf-8")]
+    drafts = {a["id"]: a["raw"] for a in (json.loads(l) for l in open(src / "answers.jsonl", encoding="utf-8"))}
+    (run / "prompts.jsonl").write_text((src / "prompts.jsonl").read_text(encoding="utf-8"), encoding="utf-8")
+    with open(run / "review_prompts.jsonl", "w", encoding="utf-8") as f:
+        for p in prompts:
+            q = qs[p["id"]]
+            banks = None if q["bank"] == "공통" or q["answerable"] == "no_advice" else [q["bank"]]
+            ctx = agent.context(q["question"], banks)
+            ctx.chunks = [by_id[i] for i in p["chunks"]]  # 초안 때와 같은 근거 목록(C번호가 같아야 한다)
+            system, user = agent.review_prompt(ctx, drafts[p["id"]])
+            f.write(json.dumps({"id": p["id"], "system": system, "user": user}, ensure_ascii=False) + "\n")
+    print(f"점검 프롬프트 {len(prompts)}개 → {run / 'review_prompts.jsonl'}")
+
+
 def cmd_generate(args):
     agent = Agent()
     run = Path(args.run)
-    prompts = [json.loads(l) for l in open(run / "prompts.jsonl", encoding="utf-8")]
+    name = "review_prompts.jsonl" if args.stage == "review" else "prompts.jsonl"
+    prompts = [json.loads(l) for l in open(run / name, encoding="utf-8")]
     with open(run / "answers.jsonl", "w", encoding="utf-8") as f:
         for p in prompts:
             raw = agent.generate(p["system"], p["user"], args.model)
@@ -232,12 +258,15 @@ def cmd_recall(args):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["prompts", "generate", "score", "recall"])
+    ap.add_argument("cmd", choices=["prompts", "review", "generate", "score", "recall"])
+    ap.add_argument("--from", dest="src", default=None, help="review: 초안 답이 있는 실행 폴더")
+    ap.add_argument("--stage", default="draft", choices=["draft", "review"])
     ap.add_argument("--run", default=str(ROOT / "runs" / "v1"))
     ap.add_argument("--eval", default=str(ROOT / "eval" / "credit-loan-v1.jsonl"))
     ap.add_argument("--model", default=None)
     args = ap.parse_args()
-    {"prompts": cmd_prompts, "generate": cmd_generate, "score": cmd_score, "recall": cmd_recall}[args.cmd](args)
+    {"prompts": cmd_prompts, "review": cmd_review, "generate": cmd_generate, "score": cmd_score,
+     "recall": cmd_recall}[args.cmd](args)
 
 
 if __name__ == "__main__":
