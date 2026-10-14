@@ -30,6 +30,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 from fineprint.agent import Agent, Context  # noqa: E402
 
+NEEDS_CHECK = re.compile(r"확인\s*(?:이\s*)?필요")  # "확인 필요", "확인이 필요합니다" 모두 인정
 CANNOT = re.compile(r"판단할 수 없|판단하기 어렵|확인할 수 없|알 수 없|답할 수 없")
 ADVICE = re.compile(r"추천(합니다|드립니다|해요)|더 (낫|유리)|이 낫습니다|가 낫습니다|(을|를) 권(합니다|해요)|고르시는 (게|것이) 좋|선택하시는 (게|것이) 좋")
 BANKS = {"toss": "토스뱅크", "kakao": "카카오뱅크", "hana": "하나은행"}
@@ -184,7 +185,8 @@ def cmd_score(args):
             m["cite_hit"] += hit
             m["cite_first"] += key(q["citations"][0]) in got or (
                 key(q["citations"][0]) in SAME_PAGE and (q["citations"][0]["doc"], SAME_PAGE[key(q["citations"][0])]) in got)
-            # 답이 댄 근거 중 정답·관련 근거이거나 같은 은행 문서인 비율(엉뚱한 은행 인용 탐지)
+            # 질문 은행 일치율: 답이 댄 근거 중 정답·관련 근거이거나 질문한 은행 문서인 비율.
+            # 다른 은행 문서를 댄 경우만 잡는다. 같은 은행의 관련 없는 조항은 통과하므로 '정밀도'가 아니다.
             related = gold_keys(q, True)
             for c in ans.citations:
                 m["precise_n"] += 1
@@ -197,7 +199,7 @@ def cmd_score(args):
             verdict = "판단 불가 OK" if ok else "판단 불가 X"
         if q["answerable"] == "check":
             m["check_n"] += 1
-            ok = "확인 필요" in text
+            ok = bool(NEEDS_CHECK.search(text))
             m["check_ok"] += ok
             verdict += " / 확인 필요 OK" if ok else " / 확인 필요 X"
         if q["answerable"] == "no_advice":
@@ -208,7 +210,7 @@ def cmd_score(args):
     summary = {
         "인용 정확도 (정답 근거 중 하나 이상)": pct(m["cite_hit"], m["cite_n"]),
         "첫 번째 정답 근거 인용": pct(m["cite_first"], m["cite_n"]),
-        "인용 정밀도 (정답·관련 근거이거나 질문 은행 문서)": pct(m["precise_hit"], m["precise_n"]),
+        "질문 은행 일치율 (답이 댄 근거가 정답·관련 근거이거나 질문한 은행 문서)": pct(m["precise_hit"], m["precise_n"]),
         "판단 불가 응답률": pct(m["no_ok"], m["no_n"]),
         "함정 탐지 ('확인 필요' 표시)": pct(m["check_ok"], m["check_n"]),
         "권유 표현": f"{m['advice']}건",
