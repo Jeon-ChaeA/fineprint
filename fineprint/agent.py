@@ -110,7 +110,7 @@ REF_PER_ARTICLE = 2  # 참조를 따라 넣는 기본약관 조각 수 (한 조�
 
 
 class Agent:
-    def __init__(self, max_chunks: int = 26):
+    def __init__(self, max_chunks: int = 28):
         self.chunks = load()
         self.index = Index(self.chunks)
         self.max_chunks = max_chunks

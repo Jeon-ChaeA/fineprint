@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -82,6 +83,16 @@ def load(processed: Path | str = ROOT / "data" / "processed") -> list[Chunk]:
                 continue  # 부칙은 검색 대상에서 뺀다
             paras = [p for p in u.get("paragraphs", []) if p.get("paragraph")]
             art_id = f"{d['id']}:{u['article']}"
+            # 항 번호가 없는 앞부분(표, 주석 등)도 버리지 않는다. 1.2까지는 이 부분이 빠져
+            # 카카오뱅크 약정서 제1조의 주2)(자동이체 저녁 6시 기준)가 검색 대상에 없었다(새 문항 J04).
+            heads = [p["text"] for p in u.get("paragraphs", []) if not p.get("paragraph") and p["text"].strip()]
+            if paras and heads:
+                pieces = [x for h in heads for x in re.split(r"(?=주\s*\d\))", h) if x.strip()]
+                # 빈 서식 칸(□ 체크박스가 많은 부분)과 짧은 꼬리말은 뺀다. 남는 것은 주석 문장이다
+                pieces = [x for x in pieces if len(x) >= 80 and x.count("□") * 200 <= len(x)]
+                for i, w in enumerate(w for piece in pieces for w in _windows(piece)):
+                    chunks.append(Chunk(id=f"{art_id}#{i}", text=w, article=u["article"],
+                                        article_title=u.get("title"), page=u.get("page"), **base))
             if not paras:
                 chunks.append(Chunk(id=art_id, text=u["text"], article=u["article"],
                                     article_title=u.get("title"), page=u.get("page"), **base))
