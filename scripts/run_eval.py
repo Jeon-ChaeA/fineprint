@@ -120,9 +120,9 @@ def cmd_review(args):
     qs = {q["id"]: q for q in load_eval(args.eval)}
     by_id = {c.id: c for c in agent.chunks}
     prompts = [json.loads(l) for l in open(src / "prompts.jsonl", encoding="utf-8")]
-    drafts = {a["id"]: a["raw"] for a in (json.loads(l) for l in open(src / "answers.jsonl", encoding="utf-8"))}
+    drafts = {a["id"]: a["raw"] for a in (json.loads(l) for l in open(src / args.answers, encoding="utf-8"))}
     (run / "prompts.jsonl").write_text((src / "prompts.jsonl").read_text(encoding="utf-8"), encoding="utf-8")
-    with open(run / "review_prompts.jsonl", "w", encoding="utf-8") as f:
+    with open(run / f"review_prompts{args.tag}.jsonl", "w", encoding="utf-8") as f:
         for p in prompts:
             q = qs[p["id"]]
             banks = None if q["bank"] == "공통" or q["answerable"] == "no_advice" else [q["bank"]]
@@ -130,7 +130,7 @@ def cmd_review(args):
             ctx.chunks = [by_id[i] for i in p["chunks"]]  # 초안 때와 같은 근거 목록(C번호가 같아야 한다)
             system, user = agent.review_prompt(ctx, drafts[p["id"]])
             f.write(json.dumps({"id": p["id"], "system": system, "user": user}, ensure_ascii=False) + "\n")
-    print(f"점검 프롬프트 {len(prompts)}개 → {run / 'review_prompts.jsonl'}")
+    print(f"점검 프롬프트 {len(prompts)}개 → {run / f'review_prompts{args.tag}.jsonl'}")
 
 
 def cmd_generate(args):
@@ -150,7 +150,7 @@ def cmd_score(args):
     run = Path(args.run)
     qs = {q["id"]: q for q in load_eval(args.eval)}
     prompts = {p["id"]: p for p in (json.loads(l) for l in open(run / "prompts.jsonl", encoding="utf-8"))}
-    answers = {a["id"]: a for a in (json.loads(l) for l in open(run / "answers.jsonl", encoding="utf-8"))}
+    answers = {a["id"]: a for a in (json.loads(l) for l in open(run / args.answers, encoding="utf-8"))}
     by_id = {c.id: c for c in agent.chunks}
 
     def parsed(qid):
@@ -216,7 +216,7 @@ def cmd_score(args):
         "권유 표현": f"{m['advice']}건",
         "근거 목록에 없는 인용": f"{m['invalid']}건",
     }
-    out = run / "score.md"
+    out = run / f"score{args.tag}.md"
     with open(out, "w", encoding="utf-8") as f:
         f.write("# 자동 채점 결과\n\n| 지표 | 결과 |\n|---|---|\n")
         for k, v in summary.items():
@@ -225,7 +225,7 @@ def cmd_score(args):
         for r in rows:
             f.write("| " + " | ".join(x.replace("|", "/") for x in r) + " |\n")
     # 사람 채점용 시트. 이미 있으면 채점 내용을 지키려고 grading.new.md로 쓴다
-    sheet = run / ("grading.new.md" if (run / "grading.md").exists() else "grading.md")
+    sheet = run / (f"grading{args.tag}.new.md" if (run / f"grading{args.tag}.md").exists() else f"grading{args.tag}.md")
     with open(sheet, "w", encoding="utf-8") as f:
         f.write("# 답 정확도 채점지\n\n문항마다 '정답 요지'를 빠짐없이, 틀린 말 없이 담았으면 O, 일부만 맞으면 △, 틀리면 X.\n\n")
         for qid, q in qs.items():
@@ -266,6 +266,8 @@ def main():
     ap.add_argument("--run", default=str(ROOT / "runs" / "v1"))
     ap.add_argument("--eval", default=str(ROOT / "eval" / "credit-loan-v1.jsonl"))
     ap.add_argument("--model", default=None)
+    ap.add_argument("--answers", default="answers.jsonl", help="review·score: 읽을 답 파일 (여러 번 돌릴 때 answers_r2.jsonl 등)")
+    ap.add_argument("--tag", default="", help="review·score: 출력 파일 이름 뒤에 붙일 표시 (예: _r2)")
     args = ap.parse_args()
     {"prompts": cmd_prompts, "review": cmd_review, "generate": cmd_generate, "score": cmd_score,
      "recall": cmd_recall}[args.cmd](args)
