@@ -9,3 +9,8 @@ runs/*/ai_grades.json
 runs/*/grading.new.md
 runs/*/review_prompts*.jsonl
 runs/_gen*/
+
+# 실행 원자료(답 원문, 3회 채점지, 블라인드 원본)는 로컬에만 둔다. 레포에는 결과 문서와 score만 올린다.
+runs/*/answers_r*.jsonl
+runs/*/grading_3x.md
+runs/*/blind_*.json

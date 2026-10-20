@@ -115,6 +115,7 @@ AI 검토자는 정답 키를 만든 쪽과 같은 계열의 모델이라 같은
 - 채점: 비교하는 두 버전의 답 6개(3회 × 2)를 섞어 A~F로만 표시하고 한 채점자가 채점한다(블라인드).
 - 등급: 3회 다수결. O 2회 이상이면 O, △ 2회 이상이면 △, X 2회 이상이면 X, 셋 다 다르면 △.
 - 집계와 채점지: [scripts/aggregate_blind.py](../scripts/aggregate_blind.py), [scripts/write_grading_3x.py](../scripts/write_grading_3x.py). 결과: [results-v1.4.md](results-v1.4.md).
+- 답 원문·3회 채점지·블라인드 원본은 로컬 `runs/`에만 두고 레포에 올리지 않는다(.gitignore). 레포에는 결과 문서와 `score_r*.md`만 올린다.
 
 ## 채점 기준 (2026-10-14 전채아 채점 피드백)
 

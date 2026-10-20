@@ -66,7 +66,5 @@
 
 ## 원자료
 
-- 채점지(3회): [runs/v1.4/grading_3x.md](../runs/v1.4/grading_3x.md), [runs/v1.4-holdout/](../runs/v1.4-holdout/grading_3x.md), [runs/v1.4-holdout2/](../runs/v1.4-holdout2/grading_3x.md), [runs/v1.4-holdout3/](../runs/v1.4-holdout3/grading_3x.md), 1.3은 각 `runs/v1.3*/grading_3x.md`
-- 답: 각 실행 폴더의 `answers_r1.jsonl` ~ `answers_r3.jsonl`
-- 블라인드 표시와 채점 원본: [runs/v1.4/blind_key.json](../runs/v1.4/blind_key.json), [runs/v1.4/blind_grades.json](../runs/v1.4/blind_grades.json)
+- 실행 원자료(답 원문 `answers_r1~r3.jsonl`, 3회 채점지 `grading_3x.md`, 블라인드 표시·채점 원본 `blind_*.json`)는 용량이 커서 2026-10-20부터 **레포에 올리지 않고 로컬 `runs/`에만 둔다**(.gitignore). 레포에는 이 결과 문서와 회차별 자동 채점 `score_r1~r3.md`만 올린다.
 - 집계: [scripts/aggregate_blind.py](../scripts/aggregate_blind.py), 채점지 생성: [scripts/write_grading_3x.py](../scripts/write_grading_3x.py)
