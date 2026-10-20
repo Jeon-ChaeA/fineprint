@@ -14,3 +14,5 @@ runs/_gen*/
 runs/*/answers_r*.jsonl
 runs/*/grading_3x.md
 runs/*/blind_*.json
+runs/*/answers_draft.jsonl
+runs/*-holdout4/answers.jsonl

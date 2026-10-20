@@ -29,6 +29,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 from fineprint.agent import Agent, Context  # noqa: E402
+from fineprint import crossref  # noqa: E402
 
 NEEDS_CHECK = re.compile(r"확인\s*(?:이\s*)?필요")  # "확인 필요", "확인이 필요합니다" 모두 인정
 CANNOT = re.compile(r"판단할 수 없|판단하기 어렵|확인할 수 없|알 수 없|답할 수 없")
@@ -86,6 +87,26 @@ def recall(q: dict, chunk_ids: list[str]) -> tuple[int, int]:
     return hit, len(q["citations"])
 
 
+def recall_strict(q: dict, chunk_ids: list[str]) -> tuple[int, int]:
+    """항까지 맞춰 센다(1.5). 정답 근거가 항을 가리키면 그 항 조각(또는 항이 없는 조 전체 조각)이 있어야 맞힌 것으로 본다.
+    조 단위 재현율은 제7조 ①만 들어가도 ③을 맞힌 것으로 세어, 결과 조항을 놓친 것을 가렸다(H07, Q25)."""
+    ids = set(chunk_ids)
+    pages = context_keys(chunk_ids)
+    hit = 0
+    for c in q["citations"]:
+        if "article" not in c:
+            k = key(c)
+            hit += k in pages or (k in SAME_PAGE and (k[0], SAME_PAGE[k]) in pages)
+        elif c.get("paragraph"):
+            base = f"{c['doc']}:{c['article']}"
+            hit += f"{base}{c['paragraph']}" in ids or base in ids
+        else:
+            base = f"{c['doc']}:{c['article']}"
+            hit += any(i == base or (i.startswith(base) and i[len(base):len(base) + 1] not in "0123456789"
+                                     and not i[len(base):].startswith("의")) for i in ids)
+    return hit, len(q["citations"])
+
+
 def load_eval(path):
     return [json.loads(l) for l in open(path, encoding="utf-8")]
 
@@ -128,6 +149,8 @@ def cmd_review(args):
             banks = None if q["bank"] == "공통" or q["answerable"] == "no_advice" else [q["bank"]]
             ctx = agent.context(q["question"], banks)
             ctx.chunks = [by_id[i] for i in p["chunks"]]  # 초안 때와 같은 근거 목록(C번호가 같아야 한다)
+            # 경고도 그 근거 목록에서 다시 계산한다(다른 버전의 초안을 점검할 때 검색 결과가 달라도 맞게)
+            ctx.warnings = [w for c in ctx.chunks for w in crossref.check(c, agent.basic.get(c.bank, {}))]
             system, user = agent.review_prompt(ctx, drafts[p["id"]])
             f.write(json.dumps({"id": p["id"], "system": system, "user": user}, ensure_ascii=False) + "\n")
     print(f"점검 프롬프트 {len(prompts)}개 → {run / f'review_prompts{args.tag}.jsonl'}")
@@ -246,16 +269,17 @@ def cmd_score(args):
 def cmd_recall(args):
     """이미 만든 prompts.jsonl의 근거 재현율만 다시 센다 (다른 버전과 비교용)"""
     qs = {q["id"]: q for q in load_eval(args.eval)}
-    got = total = full = n = 0
-    for line in open(Path(args.run) / "prompts.jsonl", encoding="utf-8"):
-        p = json.loads(line)
-        q = qs[p["id"]]
-        if q["citations"]:
-            h, t = recall(q, p["chunks"])
-            got, total, full, n = got + h, total + t, full + (h == t), n + 1
-            if h < t:
-                print(f"  {p['id']} {h}/{t}")
-    print(f"근거 재현율: {got}/{total} ({got / total:.0%}), 정답 근거를 모두 가져온 문항 {full}/{n}")
+    for name, fn in [("조 단위", recall), ("항 단위", recall_strict)]:
+        got = total = full = n = 0
+        for line in open(Path(args.run) / "prompts.jsonl", encoding="utf-8"):
+            p = json.loads(line)
+            q = qs[p["id"]]
+            if q["citations"]:
+                h, t = fn(q, p["chunks"])
+                got, total, full, n = got + h, total + t, full + (h == t), n + 1
+                if h < t and args.verbose:
+                    print(f"  {p['id']} {h}/{t}")
+        print(f"근거 재현율({name}): {got}/{total} ({got / total:.0%}), 정답 근거를 모두 가져온 문항 {full}/{n}")
 
 
 def main():
@@ -268,6 +292,7 @@ def main():
     ap.add_argument("--model", default=None)
     ap.add_argument("--answers", default="answers.jsonl", help="review·score: 읽을 답 파일 (여러 번 돌릴 때 answers_r2.jsonl 등)")
     ap.add_argument("--tag", default="", help="review·score: 출력 파일 이름 뒤에 붙일 표시 (예: _r2)")
+    ap.add_argument("--verbose", action="store_true", help="recall: 근거를 다 못 가져온 문항을 출력")
     args = ap.parse_args()
     {"prompts": cmd_prompts, "review": cmd_review, "generate": cmd_generate, "score": cmd_score,
      "recall": cmd_recall}[args.cmd](args)

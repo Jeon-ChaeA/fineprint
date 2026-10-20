@@ -31,7 +31,9 @@ SYNONYMS = {
     "자동으로 연장": ["기한연장", "기한 연장"],
     "연장": ["기한연장", "기한 연장", "만기연장"],
     "만기": ["대출기간 종료일", "약정기일"],
-    "취소": ["철회"],
+    "취소": ["철회", "대출취소"],
+    "신청만": ["대출신청 이후"],
+    "늘리": ["증액"],
     "마음이 바뀌": ["철회"],
     "금리를 낮춰": ["금리인하요구", "금리변경을 요구"],
     "금리": ["대출금리", "이율"],
@@ -71,6 +73,8 @@ def expand(question: str) -> str:
 
 
 class Index:
+    PAGE_PIECES = 2
+
     def __init__(self, chunks: list[Chunk], k1: float = 1.2, b: float = 0.75):
         self.chunks = chunks
         self.by_id = {c.id: c for c in chunks}
@@ -110,21 +114,30 @@ class Index:
 
         한 층(대개 긴 설명서)이 근거 자리를 다 차지하면, 다른 층에 있는 예외 조항을 놓친다(1차 평가 Q11, Q18, Q23).
         """
-        quotas = quotas or {1: 4, 2: 5, 3: 4}
+        quotas = quotas or {1: 4, 2: 5, 3: 5}
         allhits = self.search(question, banks=banks, k=len(self.chunks))
-        out = []
+        out, seen_text = [], set()
         for layer, n in quotas.items():
-            units: set = set()
+            units: dict = {}
             for h in allhits:
                 c = h[0]
                 if c.layer != layer:
+                    continue
+                # 내용이 같은 조각은 하나만 (하나은행 설명서 1~3쪽 = 4~6쪽, 1.5)
+                t = (c.doc, re.sub(r"\s+", "", c.text))
+                if t in seen_text:
                     continue
                 # 같은 조(또는 같은 쪽)에서 나온 조각은 한 단위로 센다. 설명서 한 쪽이 여러 조각으로 나뉘어 자리를 독차지하지 않게
                 unit = (c.doc, c.article or c.page)
                 if unit not in units:
                     if len(units) >= n:
                         continue
-                    units.add(unit)
+                    units[unit] = 0
+                # 설명서 한 쪽에서는 점수 높은 조각 PAGE_PIECES개만 (1.4까지는 걸린 조각을 다 넣어 한 쪽이 5칸씩 차지했다)
+                if c.article is None and units[unit] >= self.PAGE_PIECES:
+                    continue
+                units[unit] += 1
+                seen_text.add(t)
                 out.append(h)
         out.sort(key=lambda x: -x[1])
         return out
