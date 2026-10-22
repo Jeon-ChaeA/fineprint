@@ -73,7 +73,7 @@ def expand(question: str) -> str:
 
 
 class Index:
-    PAGE_PIECES = 2
+    PAGE_PIECES = 3
 
     def __init__(self, chunks: list[Chunk], k1: float = 1.2, b: float = 0.75):
         self.chunks = chunks
@@ -133,7 +133,7 @@ class Index:
                     if len(units) >= n:
                         continue
                     units[unit] = 0
-                # 설명서 한 쪽에서는 점수 높은 조각 PAGE_PIECES개만 (1.4까지는 걸린 조각을 다 넣어 한 쪽이 5칸씩 차지했다)
+                # 설명서 한 쪽에서는 점수 높은 조각 PAGE_PIECES개만. 1.4까지는 걸린 조각을 다 넣어 한 쪽이 5칸씩 차지했고, 2개로 줄이니 같은 쪽의 정답 문장이 잘렸다(K09, Q31)
                 if c.article is None and units[unit] >= self.PAGE_PIECES:
                     continue
                 units[unit] += 1

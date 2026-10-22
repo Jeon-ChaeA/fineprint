@@ -8,7 +8,8 @@
 1.4에서 점검 항목(법 요건 문구, 근거에 명시된 결론을 미루지 않기, 현재 적용 여부, 길이 제한)을 고쳐
 문항당 3회 평가로 다시 쟀고, 처음 보는 문항에서도 오르고 내려간 문항이 없어 기본값으로 켰다(eval/results-v1.4.md).
 1.5에서 검색을 보강했다: 같은 내용 조각 빼기, 설명서 한 쪽 2조각, 항까지 참조 따라가기, 결과 조항 잇기,
-콕 집어 넣은 조각은 상한에서 자르지 않기. 근거 재현율(항 단위) 86% → 97%(eval/results-v1.5.md).
+상실 여부 질문 잇기, 콕 집어 넣은 조각은 상한에서 자르지 않기. 근거 재현율(항 단위) 86% → 97%,
+3회 다수결 82문항 O 63 → 68(eval/results-v1.5.md).
 
 LLM이 하는 일은 "준 근거 안에서 답 쓰기"뿐이다. 검색, 교차 참조 확인, 인용 검증은 코드가 한다.
 그래서 LLM이 근거에 없는 조항을 지어내면 코드에서 걸러진다.
@@ -120,6 +121,8 @@ SHORT_DOC = 3000   # 이보다 짧은 문서(추가약정서 등)는 한 조각�
 REF_PER_ARTICLE = 2  # 참조를 따라 넣는 기본약관 조각 수 (한 조당, 앞쪽 항부터)
 # 의무를 어기거나 하지 않았을 때의 결과를 묻는 말
 CONSEQUENCE = re.compile(r"안\s*하면|않으면|안\s*내면|어기|위반|안\s*지키|거부하면|응하지|못\s*하면")
+# 대출 전체를 곧 갚아야 하는지(기한의 이익 상실 여부)를 묻는 말 (1.5, L06)
+ACCELERATION = re.compile(r"(?:당장|한꺼번에|전부|전액|모두)\s*(?:다\s*)?갚|다\s*갚으라|기한(?:의)?\s*이익")
 
 
 class Agent:
@@ -184,10 +187,14 @@ class Agent:
                         follow(x)
         # 결과 조항 잇기: "안 하면 어떻게 되나"처럼 의무를 어긴 결과를 물으면, 위반 시 결과를 정한
         # 기본약관 제7조(기한의 이익 상실) ③·④를 넣는다. 의무 조항(회보, 용도 등)은 제7조를 직접 가리키지 않는다(1.5, H07)
-        if CONSEQUENCE.search(question):
+        # 대출 전체를 곧 갚아야 하느냐고 물으면 상실 사유와 절차 전체(①~④)를 넣는다. "연체정보 등록"처럼
+        # 질문의 사유가 ③의 각 호에 있어도 검색에서 ①·②만 걸려, 사유가 없다고 잘못 답했다(1.5, L06)
+        want = (("①", "②", "③", "④") if ACCELERATION.search(question)
+                else ("③", "④") if CONSEQUENCE.search(question) else ())
+        if want:
             for bank in banks or sorted({c.bank for c in hits}):
                 for b in self.basic_chunks.get((bank, "제7조"), []):
-                    if b.paragraph in ("③", "④"):
+                    if b.paragraph in want:
                         add(b, must=True)
         # 같은 조의 다른 항: 예외는 대개 같은 조의 다른 항이나 단서에 있다
         for c in self.index.with_siblings(hits):
