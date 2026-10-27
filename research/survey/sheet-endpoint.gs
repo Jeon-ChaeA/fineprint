@@ -1,8 +1,9 @@
 /**
  * fineprint 설문 응답 수집용 Google Apps Script
  *
- * survey/index.html 에서 보낸 응답을 Google 스프레드시트에 저장한다.
- * - responses 시트: 설문 답변 (익명)
+ * 설문 페이지에서 보낸 응답을 Google 스프레드시트에 저장한다.
+ * - responses 시트: 1차 사용자 설문 (survey/index.html, 2026-10-08 마감)
+ * - usability 시트: 프로토타입 사용성 테스트 설문 (survey/usability.html, form: "usability")
  *
  * 설정 방법은 research/survey/README.md 참고.
  */
@@ -15,6 +16,13 @@ const FIELDS = [
   'help_wanted', 'help_top', 'trust_needs', 'age', 'job', 'ua_mobile'
 ];
 
+// 사용성 테스트 설문 (research/usability/README.md)
+const USABILITY_FIELDS = [
+  'loan_exp', 'bank', 'worry_topic', 'opened_source', 'trust_source', 'summary_clear', 'confusing_line',
+  'understood_check', 'used_samples', 'tried_own_question', 'own_question', 'cannot_judge_feel',
+  'summary_vs_ask', 'would_use', 'one_fix', 'ua_mobile'
+];
+
 function doPost(e) {
   const lock = LockService.getScriptLock();
   lock.waitLock(10000);
@@ -25,8 +33,11 @@ function doPost(e) {
     const ss = SpreadsheetApp.openById(SHEET_ID);
     const now = new Date();
 
-    const responses = sheet_(ss, 'responses', ['received_at'].concat(FIELDS));
-    responses.appendRow([now].concat(FIELDS.map(function (k) { return clean_(data[k]); })));
+    const usability = data.form === 'usability';
+    const name = usability ? 'usability' : 'responses';
+    const fields = usability ? USABILITY_FIELDS : FIELDS;
+    const sh = sheet_(ss, name, ['received_at'].concat(fields));
+    sh.appendRow([now].concat(fields.map(function (k) { return clean_(data[k]); })));
 
     return ok_();
   } catch (err) {
@@ -46,6 +57,7 @@ function setup() {
   const ss = SpreadsheetApp.openById(SHEET_ID);
   ss.setSpreadsheetTimeZone('Asia/Seoul');
   sheet_(ss, 'responses', ['received_at'].concat(FIELDS));
+  sheet_(ss, 'usability', ['received_at'].concat(USABILITY_FIELDS));
 }
 
 function sheet_(ss, name, header) {

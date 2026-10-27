@@ -96,6 +96,12 @@ textarea { width: 100%; min-height: 76px; resize: vertical; font: 15px/1.6 var(-
 .answer .text sup a { font: 600 11px var(--mono); color: var(--accent); text-decoration: none; padding: 0 1px; }
 .warn { font-size: 13px; color: var(--check); background: var(--check-soft); border-radius: 6px; padding: 8px 10px; }
 .basis { font-size: 12.5px; color: var(--muted); }
+.task { background: var(--accent-soft); border: 1px solid var(--rule); border-radius: 10px; padding: 14px 16px; display: grid; gap: 8px; }
+.task h2 { font: 700 16px/1.4 var(--display); margin: 0; }
+.task ol { margin: 0; padding-left: 1.3em; display: grid; gap: 4px; font-size: 14.5px; }
+.task .row { justify-content: space-between; }
+.task a.btn { text-decoration: none; display: inline-block; }
+.task .fold { background: transparent; border: 0; color: var(--muted); font-size: 13px; padding: 4px 0; cursor: pointer; }
 footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--rule); padding-top: 14px; display: grid; gap: 4px; }
 @media (max-width: 560px) {
   .item { grid-template-columns: 1fr; }
@@ -112,6 +118,20 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--rul
       <span class="mode" id="mode"></span>
     </div>
   </header>
+
+  <aside class="task" id="task" hidden aria-label="사용해 보기 안내">
+    <h2>써 봐 주셔서 고마워요 (5~10분)</h2>
+    <ol id="task-list">
+      <li>은행 하나를 골라 '불리할 수 있는 조건'을 읽어 보세요. 내가 대출을 받는다면 가장 조심할 조건을 하나 골라 보세요.</li>
+      <li>궁금한 줄이 있으면 '근거 원문'을 펼쳐 보세요. 안 펼쳐도 괜찮아요.</li>
+      <li>'물어보기'에서 내 상황과 가까운 예시 질문을 한두 개 눌러 보세요. 묻고 싶은 게 따로 있으면 직접 써 봐도 돼요(데모라 답은 안 나와요).</li>
+      <li>다 해 보셨으면 3분 설문에 답해 주세요. 정답은 없어요. 헷갈린 곳을 알려 주시는 게 가장 큰 도움이에요.</li>
+    </ol>
+    <div class="row">
+      <a class="btn primary" id="survey-link" href="https://fineprint-survey.netlify.app/usability.html" target="_blank" rel="noopener">설문 답하기</a>
+      <button type="button" class="fold" id="task-fold">안내 접기</button>
+    </div>
+  </aside>
 
   <div class="banks" id="banks" role="group" aria-label="은행 고르기"></div>
   <div class="docs" id="docs"></div>
@@ -281,6 +301,15 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--rul
       })
       .finally(function () { $("ask-btn").disabled = false; $("ask-btn").textContent = "물어보기"; });
   });
+
+  // 사용성 테스트: 링크 끝에 #test를 붙이면 과제 안내를 보여 준다 (research/usability/README.md)
+  if (location.hash === "#test") {
+    $("task").hidden = false;
+    $("task-fold").addEventListener("click", function () {
+      var list = $("task-list"), folded = !list.hidden;
+      list.hidden = folded; this.textContent = folded ? "안내 펼치기" : "안내 접기";
+    });
+  }
 
   if (window.FINEPRINT_STATE) boot(window.FINEPRINT_STATE);
   else fetch("api/state").then(function (r) { return r.json(); }).then(boot)

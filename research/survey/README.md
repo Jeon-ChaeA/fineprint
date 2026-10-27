@@ -36,6 +36,11 @@
 - 웹 앱 URL을 브라우저로 열면 `fineprint survey endpoint is running.`이 보여야 한다.
 - 설문을 한 번 직접 제출해 보고 `responses` 시트에 한 줄이 생기는지 확인한다. 테스트 응답은 지운다.
 
+## 사용성 테스트 설문 (2026-10-27)
+
+- 같은 Apps Script 웹 앱이 `form: "usability"`인 응답을 `usability` 시트에 따로 저장한다.
+- 설문 페이지: [survey/usability.html](../../survey/usability.html), 계획: [usability/README.md](../usability/README.md)
+
 ## 이전 방식
 
 [create-form.gs](create-form.gs)는 같은 질문으로 Google 폼을 만드는 스크립트다. 디자인을 직접 꾸미기 위해 HTML 페이지 방식으로 바꿨다.

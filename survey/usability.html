@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>fineprint 사용해 보기 · 3분 설문</title>
+<meta name="description" content="fineprint 프로토타입을 써 본 뒤 답하는 3분 설문이에요.">
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+:root{
+  --bg:#f7f5ef; --paper:#fffdf8; --ink:#1d1c19; --ink-2:#5b5852; --ink-3:#8b877e;
+  --line:#e4dfd3; --accent:#1f4fd6; --accent-ink:#fff; --hl:#ffe36e; --danger:#c2372b;
+  --radius:14px; --shadow:0 1px 0 rgba(0,0,0,.03),0 8px 24px -12px rgba(40,30,0,.18);
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#121210;--paper:#1b1a17;--ink:#f2efe7;--ink-2:#bdb8ad;--ink-3:#8a857b;
+    --line:#2f2d28;--accent:#7ea0ff;--accent-ink:#0e1530;--hl:#6b5a12;--danger:#ff7a6e;
+    --shadow:0 1px 0 rgba(255,255,255,.02),0 8px 24px -12px rgba(0,0,0,.6);}
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;word-break:keep-all}
+.wrap{max-width:640px;margin:0 auto;padding:20px 16px 96px}
+header.top{display:flex;align-items:center;justify-content:space-between;padding:4px 0 16px}
+.brand{font-weight:800;letter-spacing:-.02em;font-size:18px}
+.brand small{font-weight:500;color:var(--ink-3);font-size:12px;margin-left:6px;letter-spacing:0}
+.step-count{font-size:13px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.progress{height:4px;background:var(--line);border-radius:4px;overflow:hidden;margin-bottom:20px}
+.progress>i{display:block;height:100%;width:0;background:var(--accent);transition:width .3s ease}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:28px 22px}
+h1{font-size:28px;line-height:1.3;letter-spacing:-.03em;margin:4px 0 14px}
+h2{font-size:21px;line-height:1.35;letter-spacing:-.02em;margin:0 0 6px}
+.mark{background:linear-gradient(transparent 58%,var(--hl) 58%);padding:0 2px}
+.lead{color:var(--ink-2);margin:0 0 18px}
+.fine{font-size:12.5px;line-height:1.55;color:var(--ink-3);border-top:1px dashed var(--line);margin-top:22px;padding-top:14px}
+.fine p{margin:0 0 4px}
+.fine p::before{content:"* ";}
+.q{margin:26px 0 0}
+.q:first-of-type{margin-top:18px}
+.q-title{font-weight:700;font-size:16.5px;margin:0 0 4px;letter-spacing:-.01em}
+.q-title .req{color:var(--danger);font-weight:600;margin-left:4px;font-size:13px}
+.q-help{font-size:13.5px;color:var(--ink-3);margin:0 0 10px}
+.opts{display:grid;gap:8px;margin-top:10px}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border:1px solid var(--line);border-radius:12px;cursor:pointer;
+  background:transparent;transition:border-color .15s,background .15s;min-height:48px}
+.opt:hover{border-color:var(--ink-3)}
+.opt input{margin:3px 0 0;accent-color:var(--accent);width:18px;height:18px;flex:none}
+.opt span{flex:1}
+.opt:has(input:checked){border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,transparent)}
+.scale{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px}
+.scale label{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 0;border:1px solid var(--line);border-radius:12px;cursor:pointer;font-weight:700}
+.scale input{position:absolute;opacity:0;pointer-events:none}
+.scale label:has(input:checked){border-color:var(--accent);background:var(--accent);color:var(--accent-ink)}
+.scale label:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+.scale-legend{display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink-3);margin-top:6px}
+textarea,input[type=text]{width:100%;font:inherit;color:inherit;background:transparent;border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+textarea{min-height:110px;resize:vertical}
+textarea:focus,input[type=text]:focus{outline:none;border-color:var(--accent)}
+.other-input{margin-top:6px}
+.err{color:var(--danger);font-size:13px;margin-top:8px;display:none}
+.q.invalid .err{display:block}
+.q.invalid .opts .opt,.q.invalid .scale label{border-color:color-mix(in srgb,var(--danger) 60%,var(--line))}
+.nav{position:fixed;left:0;right:0;bottom:0;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);
+  border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom))}
+.nav-in{max-width:640px;margin:0 auto;display:flex;gap:10px}
+button{font:inherit;font-weight:700;border-radius:12px;padding:14px 18px;border:1px solid var(--line);background:var(--paper);color:var(--ink);cursor:pointer;min-height:50px}
+button.primary{flex:1;background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.hidden{display:none!important}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.done{text-align:center;padding:40px 22px}
+.done .big{font-size:44px;margin-bottom:8px}
+.notice{font-size:13px;color:var(--danger);margin-top:12px}
+a{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">fineprint<small>사용해 보기 설문</small></div>
+    <div class="step-count" id="stepCount" aria-live="polite"></div>
+  </header>
+  <div class="progress" aria-hidden="true"><i id="bar"></i></div>
+
+  <form id="survey" novalidate>
+    <input class="hp" type="text" name="_hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <div id="steps"></div>
+  </form>
+
+  <section class="card done hidden" id="done" aria-live="polite">
+    <div class="big" aria-hidden="true">✓</div>
+    <h2>응답해 주셔서 감사합니다</h2>
+    <p class="lead">결과는 프로젝트 기록에 익명으로 정리해 공유할게요.</p>
+    <p class="lead" style="margin:0"><a href="https://github.com/Jeon-ChaeA/fineprint">fineprint 프로젝트 보러 가기</a></p>
+  </section>
+</div>
+
+<nav class="nav" id="nav">
+  <div class="nav-in">
+    <button type="button" id="prev">이전</button>
+    <button type="button" class="primary" id="next">시작하기</button>
+  </div>
+</nav>
+
+<script>
+/* 응답을 받을 Google Apps Script 웹 앱 주소. 배포 후 여기에 붙여 넣는다. */
+const ENDPOINT = "https://script.google.com/macros/s/AKfycbxRGfOE6x-oancUMKG-uDNrOA0eTSIpxq0gSlkDa-dxzxoyMfxZJ7gK5ZWhFU9A4R2I/exec";
+
+const TOPICS = ["금리가 오르는 조건", "중도상환해약금", "연체이자", "한꺼번에 갚아야 하는 경우", "신용점수 영향", "만기 연장 조건", "딱히 없었다"];
+
+const STEPS = [
+  { intro: true },
+  { title: "불리할 수 있는 조건", qs: [
+    { id: "bank", type: "radio", req: true, t: "어느 은행으로 해 보셨나요?", h: "여러 곳을 봤다면 가장 오래 본 곳을 골라 주세요.",
+      o: ["토스뱅크", "카카오뱅크", "하나은행"] },
+    { id: "worry_topic", type: "radio", req: true, t: "요약에서 내가 대출을 받는다면 가장 조심해야겠다고 느낀 조건은 무엇인가요?", o: TOPICS },
+    { id: "opened_source", type: "radio", req: true, t: "'근거 원문'을 펼쳐 봤나요?",
+      o: ["여러 번 펼쳐 봤다", "한두 번 펼쳐 봤다", "펼쳐 보지 않았다", "펼쳐 볼 수 있는 줄 몰랐다"] },
+    { id: "summary_clear", type: "scale", req: true, t: "요약 문장은 이해하기 쉬웠나요?", lo: "어려웠다", hi: "쉬웠다" },
+    { id: "trust_source", type: "scale", req: true, t: "조항 원문이 붙어 있어서 요약을 더 믿게 됐나요?", lo: "전혀 아니다", hi: "매우 그렇다" },
+    { id: "confusing_line", type: "text", t: "헷갈리거나 무슨 뜻인지 모르겠던 줄이 있었나요?", h: "어느 은행, 어느 줄이었는지 적어 주세요. (선택)" },
+    { id: "understood_check", type: "radio", t: "요약 끝의 '이 조건들, 이해되셨나요?'에는 뭐라고 답했나요?",
+      o: ["네, 이해했어요", "잘 모르겠는 게 있어요", "누르지 않았다"] }
+  ]},
+  { title: "물어보기", qs: [
+    { id: "used_samples", type: "radio", req: true, t: "'물어보기'에서 예시 질문을 눌러 봤나요?",
+      o: ["여러 개 눌러 봤다", "하나 눌러 봤다", "물어보기 탭을 열지 않았다", "열었지만 누르지 않았다"] },
+    { id: "tried_own_question", type: "radio", req: true, t: "예시 말고 내 질문을 직접 써 보려고 했나요?",
+      h: "데모에서는 직접 쓴 질문에 답하지 않아요. 써 보려고 했는지만 알려 주세요.", o: ["써 보려고 했다", "아니다"] },
+    { id: "own_question", type: "text", t: "직접 묻고 싶었던 질문이 있다면 적어 주세요.",
+      h: "예: \"1년 안에 갚으면 수수료가 얼마예요?\" 금액·계좌·신용점수 같은 개인정보는 빼고 적어 주세요. (선택)" },
+    { id: "cannot_judge_feel", type: "radio", req: true, t: "'판단할 수 없음' 답을 봤을 때 어땠나요?",
+      h: "예: \"저는 토스뱅크에서 금리가 몇 %로 나오나요?\"의 답",
+      o: ["모르는 걸 모른다고 해서 더 믿음이 갔다", "답을 안 줘서 답답했다", "둘 다", "그런 답을 보지 못했다"] }
+  ]},
+  { title: "전체적으로", last: true, qs: [
+    { id: "summary_vs_ask", type: "radio", req: true, t: "둘 중 더 쓸모 있었던 쪽은?",
+      o: ["요약만으로 충분했다", "물어보기가 더 필요했다", "둘 다 필요하다", "둘 다 별로였다"] },
+    { id: "would_use", type: "scale", req: true, t: "대출을 실제로 알아볼 때 이런 도구를 쓸 것 같나요?", lo: "안 쓸 것 같다", hi: "꼭 쓸 것 같다" },
+    { id: "one_fix", type: "text", t: "하나만 고친다면 무엇을 고치고 싶나요?", h: "(선택)" },
+    { id: "loan_exp", type: "radio", t: "최근 3년 안에 대출(신용대출, 마이너스통장 등)을 받거나 알아본 적이 있나요?",
+      o: ["받은 적 있다", "알아보기만 했다", "없다", "응답하지 않음"] }
+  ]},
+];
+
+const $ = (s, el = document) => el.querySelector(s);
+const stepsEl = $("#steps"), form = $("#survey");
+const total = STEPS.length - 1;
+let cur = 0, sending = false;
+
+function esc(s){ const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+
+function renderIntro(){
+  return `<section class="card" data-step="0">
+    <h1>fineprint를<br><span class="mark">써 보신 뒤</span> 알려 주세요</h1>
+    <p class="lead">신용대출 약관을 조항 원문으로 읽어 주는 fineprint의 첫 화면을 써 보셨다면, 느낀 점을 묻는 <b>3분 설문</b>이에요.
+    아직 안 써 보셨다면 받은 데모 링크부터 열어 주세요.</p>
+    <div class="fine">
+      <p>응답은 익명으로 처리되며, 통계와 익명 인용으로만 사용합니다.</p>
+      <p>이름, 계좌번호, 신용점수, 대출 금액 같은 개인정보는 적지 말아 주세요.</p>
+      <p>fineprint는 학습·연구용 개인 프로젝트이고, 특정 금융사와 관계가 없으며 금융상품을 권유하지 않습니다.</p>
+    </div>
+  </section>`;
+}
+
+function renderQ(q){
+  const req = q.req ? `<span class="req">필수</span>` : "";
+  const help = q.h ? `<p class="q-help">${esc(q.h)}</p>` : "";
+  let body = "";
+  if (q.type === "radio" || q.type === "check"){
+    const kind = q.type === "radio" ? "radio" : "checkbox";
+    body = `<div class="opts">` + q.o.map(o =>
+      `<label class="opt"><input type="${kind}" name="${q.id}" value="${esc(o)}"><span>${esc(o)}</span></label>`).join("");
+    if (q.other) body += `<label class="opt"><input type="${kind}" name="${q.id}" value="__other"><span>기타</span></label>
+      <input type="text" class="other-input hidden" name="${q.id}__other" maxlength="200" placeholder="직접 적어 주세요">`;
+    body += `</div>`;
+  } else if (q.type === "scale"){
+    body = `<div class="scale">` + [1,2,3,4,5].map(n =>
+      `<label><input type="radio" name="${q.id}" value="${n}">${n}</label>`).join("") +
+      `</div><div class="scale-legend"><span>1 · ${esc(q.lo)}</span><span>5 · ${esc(q.hi)}</span></div>`;
+  } else if (q.type === "text"){
+    body = `<textarea name="${q.id}" maxlength="1500"></textarea>`;
+  }
+  return `<div class="q" data-q="${q.id}"><p class="q-title">${esc(q.t)}${req}</p>${help}${body}
+    <p class="err">이 질문에 답해 주세요.</p></div>`;
+}
+
+function render(){
+  stepsEl.innerHTML = STEPS.map((s, i) => i === 0 ? renderIntro() :
+    `<section class="card hidden" data-step="${i}">
+      <h2>${i}. ${esc(s.title)}</h2>${s.sub ? `<p class="lead">${esc(s.sub)}</p>` : ""}
+      ${s.qs.map(renderQ).join("")}
+      ${s.last ? `<p class="notice hidden" id="sendErr"></p>` : ""}
+    </section>`).join("");
+}
+
+function values(name){ return [...form.querySelectorAll(`[name="${name}"]:checked`)].map(i => i.value); }
+
+function answerOf(q){
+  if (q.type === "text") return (form.elements[q.id].value || "").trim();
+  const v = values(q.id).map(x => x === "__other" ? "기타: " + (form.elements[q.id + "__other"].value || "").trim() : x);
+  return v.join(" | ");
+}
+
+function validate(i){
+  const s = STEPS[i]; if (!s.qs) return true;
+  let ok = true, first = null;
+  s.qs.forEach(q => {
+    const box = $(`[data-q="${q.id}"]`);
+    let bad = !!(q.req && !answerOf(q));
+    box.classList.toggle("invalid", bad);
+    if (bad){ ok = false; first = first || box; }
+  });
+  if (first) first.scrollIntoView({ behavior: "smooth", block: "center" });
+  return ok;
+}
+
+function show(i){
+  cur = i;
+  document.querySelectorAll("[data-step]").forEach(el => el.classList.toggle("hidden", +el.dataset.step !== i));
+  $("#prev").classList.toggle("hidden", i === 0);
+  $("#next").textContent = i === 0 ? "시작하기" : (i === total ? "제출하기" : "다음");
+  $("#stepCount").textContent = i === 0 ? "약 3분" : `${i} / ${total}`;
+  $("#bar").style.width = (i / total * 100) + "%";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+async function submit(){
+  if (sending) return;
+  const err = $("#sendErr");
+  if (!ENDPOINT){ err.textContent = "아직 응답을 받을 준비가 되지 않았어요. 잠시 후 다시 시도해 주세요."; err.classList.remove("hidden"); return; }
+  sending = true; $("#next").disabled = true; $("#next").textContent = "보내는 중…";
+  const data = { form: "usability", _hp: form.elements._hp.value, submitted_at: new Date().toISOString(), ua_mobile: /Mobi/i.test(navigator.userAgent) ? "mobile" : "desktop" };
+  STEPS.forEach(s => (s.qs || []).forEach(q => { data[q.id] = answerOf(q); }));
+  try {
+    await fetch(ENDPOINT, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(data) });
+    form.classList.add("hidden"); $("#nav").classList.add("hidden");
+    $("#done").classList.remove("hidden"); $("#bar").style.width = "100%"; $("#stepCount").textContent = "완료";
+  } catch (e) {
+    err.textContent = "전송에 실패했어요. 인터넷 연결을 확인하고 다시 눌러 주세요.";
+    err.classList.remove("hidden");
+    $("#next").disabled = false; $("#next").textContent = "제출하기"; sending = false;
+  }
+}
+
+render(); show(0);
+
+form.addEventListener("change", e => {
+  const t = e.target;
+  if (t.value === "__other" || t.type === "radio" || t.type === "checkbox"){
+    const other = form.elements[t.name + "__other"];
+    if (other) other.classList.toggle("hidden", !values(t.name).includes("__other"));
+    if (t.value === "__other" && t.checked && other) other.focus();
+  }
+  const box = t.closest(".q"); if (box) box.classList.remove("invalid");
+});
+form.addEventListener("submit", e => e.preventDefault());
+$("#next").addEventListener("click", () => {
+  if (cur === 0) return show(1);
+  if (!validate(cur)) return;
+  if (cur === total) return submit();
+  show(cur + 1);
+});
+$("#prev").addEventListener("click", () => cur > 0 && show(cur - 1));
+</script>
+</body>
+</html>
