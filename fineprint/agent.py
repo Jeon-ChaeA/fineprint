@@ -1,4 +1,4 @@
-"""근거 인용 에이전트 (1.5).
+"""근거 인용 에이전트 (1.6).
 
 흐름: 질문 → 층별 조항 검색 → 같은 조의 다른 항·짧은 문서 전체·참조된 기본약관 조 붙이기 → 교차 참조 확인
      → 근거 목록과 함께 LLM에 묻기 → 답이 댄 근거가 실제로 준 근거인지 확인.
@@ -9,7 +9,8 @@
 문항당 3회 평가로 다시 쟀고, 처음 보는 문항에서도 오르고 내려간 문항이 없어 기본값으로 켰다(eval/results-v1.4.md).
 1.5에서 검색을 보강했다: 같은 내용 조각 빼기, 설명서 한 쪽 2조각, 항까지 참조 따라가기, 결과 조항 잇기,
 상실 여부 질문 잇기, 콕 집어 넣은 조각은 상한에서 자르지 않기. 근거 재현율(항 단위) 86% → 97%,
-3회 다수결 82문항 O 63 → 68(eval/results-v1.5.md).
+3회 다수결 72문항 O 63 → 68(eval/results-v1.5.md).
+1.6에서 점검 단계에 '짝'(비교 질문의 만나는 지점, 나란히 적힌 사유)을 더했다. O 68 → 70(eval/results-v1.6.md).
 
 LLM이 하는 일은 "준 근거 안에서 답 쓰기"뿐이다. 검색, 교차 참조 확인, 인용 검증은 코드가 한다.
 그래서 LLM이 근거에 없는 조항을 지어내면 코드에서 걸러진다.
@@ -51,7 +52,7 @@ SYSTEM = """너는 fineprint다. 한국 은행 신용대출 약관을 읽고, �
 REVIEW = """너는 fineprint의 점검 담당이다. 근거 목록, 질문, 초안 답을 받고 초안을 고친 최종 답을 낸다.
 근거 목록 밖의 지식은 쓰지 않는다. 초안 규칙(근거 번호, 판단 불가, 확인 필요, 권유 금지)은 그대로 지킨다.
 
-다음 여섯 가지를 근거 목록과 하나씩 대조한다.
+다음 일곱 가지를 근거 목록과 하나씩 대조한다.
 1. 빠진 것: 질문에 답하는 데 필요한데 초안에 없는 것을 근거 목록에서 찾는다.
    - 예외·단서 (다만, 단, 제외, ~미만이면)
    - 결과 (어기거나 갚지 못하거나 거절되면 그다음 어떻게 되는가)
@@ -67,8 +68,12 @@ REVIEW = """너는 fineprint의 점검 담당이다. 근거 목록, 질문, 초�
    "확인 필요"는 근거에 없거나, 문서끼리 실제로 다르게 적혀 있을 때만 쓴다.
 6. 현재 적용 여부: 근거 문서의 시행일이 [오늘 날짜]보다 2년 이상 전이거나, 질문이 규제·의무를 묻거나
    은행끼리 비교하는 질문이면, 끝에 "수집한 문서(시행일 ○○) 기준이며, 현재도 적용되는지는 확인 필요"를 한 문장 붙인다.
+7. 짝: 질문이 묻는 것과 근거에서 나란히 적힌 것을 빠뜨리지 않았는가.
+   - 두 가지를 비교하는 질문이면, 차이만이 아니라 둘이 만나는 지점(한쪽을 하려 할 때 다른 쪽으로 처리되는 경우 등)이 근거에 있으면 쓴다.
+   - 질문이 묻는 사유·조건이 근거의 같은 목록·같은 문장에서 다른 사유와 나란히 같은 결과로 이어지면, 그 나란한 사유도 함께 쓴다.
 
 더하는 것은 질문에 답하는 데 필요한 내용만이다. 질문과 관계없는 내용을 새로 덧붙이지 않는다.
+문장 수가 모자라면 질문에서 먼 내용(부활, 다른 대출 유형의 특례, 질문하지 않은 후속 절차)부터 뺀다.
 고칠 것이 없으면 초안을 그대로 낸다. 최종 답은 7문장 이내, 초안보다 2문장 넘게 늘리지 않는다.
 
 출력은 JSON 하나만:
@@ -112,6 +117,7 @@ class Answer:
     invalid: list[str]             # 근거 목록에 없는 번호를 댄 경우
     warnings: list[str]
     raw: str = ""
+    chunk_ids: list[str] = field(default_factory=list)  # 인용한 근거 조각 id (화면에서 원문을 펼칠 때 쓴다)
 
     def to_dict(self) -> dict:
         return self.__dict__
@@ -236,13 +242,14 @@ class Agent:
         text = data.get("answer", raw.strip())
         ids = data.get("citations") or re.findall(r"C\d+", text)
         ids = list(dict.fromkeys(i.strip("[]") for i in ids))
-        cites, labels, invalid = [], [], []
+        cites, labels, invalid, cids = [], [], [], []
         for i in ids:
             n = int(i[1:]) if i[1:].isdigit() else 0
             if 1 <= n <= len(ctx.chunks):
                 c = ctx.chunks[n - 1]
                 cites.append(c.cite())
                 labels.append(c.label())
+                cids.append(c.id)
             else:
                 invalid.append(i)
         status = data.get("status", "answered")
@@ -250,7 +257,7 @@ class Agent:
         used = {ctx.chunks[int(i[1:]) - 1].id for i in ids if i not in invalid}
         if warned & used and "확인 필요" not in text:
             status = "flag_missing"   # 경고가 붙은 근거를 쓰고도 "확인 필요"를 밝히지 않음
-        return Answer(status, text, cites, labels, invalid, [w.text() for w in ctx.warnings], raw)
+        return Answer(status, text, cites, labels, invalid, [w.text() for w in ctx.warnings], raw, cids)
 
     def generate(self, system: str, user: str, model: str | None = None) -> str:
         """Anthropic API로 답을 만든다. ANTHROPIC_API_KEY가 필요하다."""

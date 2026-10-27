@@ -18,3 +18,5 @@ runs/*/answers_draft.jsonl
 runs/*-holdout4/answers.jsonl
 runs/*/answers_draft*.jsonl
 runs/v1.5*/grading*.md
+app/dist/
+app/feedback.local.jsonl

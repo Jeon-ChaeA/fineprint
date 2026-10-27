@@ -1,0 +1,289 @@
+<title>fineprint 신용대출</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@500;600;700&family=Noto+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* 레이아웃: 한 열 문서. 위에서 은행을 고르고, 탭 둘(불리할 수 있는 조건 / 물어보기). 근거는 항상 펼쳐 볼 수 있는 원문 발췌로. */
+:root {
+  --paper: #f6f7f9;      /* 바탕: 푸른 기가 도는 종이색 */
+  --sheet: #ffffff;      /* 문서 면 */
+  --ink: #1b2230;        /* 본문 */
+  --muted: #5c6577;      /* 보조 글 */
+  --rule: #dfe3ea;       /* 선 */
+  --accent: #2f4fa8;     /* 조항 표기·링크: 도장 인주 대신 서류철 남색 */
+  --accent-soft: #e8edf9;
+  --excerpt: #fbfaf6;    /* 원문 발췌 면 */
+  --ok: #1f7a4d;   --ok-soft: #e4f3ea;
+  --hold: #9a6200; --hold-soft: #fbf0d9;
+  --check: #b23b2e; --check-soft: #fae6e2;
+  --display: "IBM Plex Sans KR", "Noto Sans KR", system-ui, sans-serif;
+  --body: "Noto Sans KR", system-ui, -apple-system, "Apple SD Gothic Neo", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #12161e; --sheet: #1a1f2a; --ink: #e6e9ef; --muted: #a0a8b8; --rule: #2c3342;
+    --accent: #9db3f2; --accent-soft: #232c45; --excerpt: #1e2330;
+    --ok: #6fcf9a; --ok-soft: #173326; --hold: #e8b65a; --hold-soft: #3a2c12; --check: #f08a7d; --check-soft: #3d1f1b;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #12161e; --sheet: #1a1f2a; --ink: #e6e9ef; --muted: #a0a8b8; --rule: #2c3342;
+  --accent: #9db3f2; --accent-soft: #232c45; --excerpt: #1e2330;
+  --ok: #6fcf9a; --ok-soft: #173326; --hold: #e8b65a; --hold-soft: #3a2c12; --check: #f08a7d; --check-soft: #3d1f1b;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--paper); color: var(--ink); font: 15px/1.7 var(--body); margin: 0; }
+.wrap { max-width: 760px; margin: 0 auto; padding-block: 28px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 20px; }
+header { display: grid; gap: 6px; }
+.brand { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.brand h1 { font: 700 26px/1.2 var(--display); letter-spacing: -0.01em; margin: 0; }
+.brand .tag { color: var(--muted); font-size: 14px; }
+.mode { font: 500 12px/1 var(--mono); color: var(--muted); border: 1px solid var(--rule); border-radius: 999px; padding: 4px 9px; }
+.banks { display: flex; gap: 8px; flex-wrap: wrap; }
+.banks button, .tabs button, .chip, .btn {
+  font: 500 14px/1.2 var(--body); color: var(--ink); background: var(--sheet); border: 1px solid var(--rule);
+  border-radius: 8px; padding: 9px 14px; cursor: pointer; }
+.banks button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+button:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.docs { display: flex; gap: 6px 14px; flex-wrap: wrap; color: var(--muted); font-size: 13px; }
+.docs span b { font-weight: 500; color: var(--ink); }
+.docs .ver { font: 12px var(--mono); }
+.tabs { display: flex; gap: 0; border-bottom: 1px solid var(--rule); }
+.tabs button { border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: transparent; padding: 10px 14px; color: var(--muted); }
+.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); font-weight: 700; }
+.panel { display: grid; gap: 14px; }
+.lede { color: var(--muted); font-size: 14px; margin: 0; }
+.items { list-style: none; margin: 0; padding: 0; display: grid; border-top: 1px solid var(--rule); }
+.item { display: grid; grid-template-columns: 8.5em 1fr; gap: 4px 16px; padding: 14px 0; border-bottom: 1px solid var(--rule); }
+.item .topic { font: 600 13px/1.6 var(--display); color: var(--muted); letter-spacing: 0.02em; padding-top: 1px; }
+.item .body { min-width: 0; display: grid; gap: 6px; }
+.item .line { font-size: 16px; line-height: 1.6; text-wrap: pretty; }
+details.src > summary { list-style: none; cursor: pointer; font: 500 13px var(--body); color: var(--accent); display: inline-flex; gap: 6px; align-items: center; }
+details.src > summary::-webkit-details-marker { display: none; }
+details.src > summary::before { content: "▸"; font-size: 11px; transition: transform .15s; }
+details.src[open] > summary::before { transform: rotate(90deg); }
+.excerpts { display: grid; gap: 8px; margin-top: 8px; }
+.excerpt { background: var(--excerpt); border: 1px solid var(--rule); border-radius: 6px; padding: 10px 12px; min-width: 0; }
+.excerpt .where { font: 500 12px/1.5 var(--mono); color: var(--accent); margin-bottom: 4px; overflow-wrap: anywhere; }
+.excerpt .where .n { display: inline-block; min-width: 1.6em; color: var(--ink); }
+.excerpt p { margin: 0; font-size: 13.5px; line-height: 1.75; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 15em; overflow-y: auto; }
+.excerpt .none { color: var(--muted); font-style: italic; }
+.check { background: var(--sheet); border: 1px solid var(--rule); border-radius: 10px; padding: 14px 16px; display: grid; gap: 10px; }
+.check .q { font-weight: 500; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--sheet); }
+.btn:disabled { opacity: .5; cursor: default; }
+.thanks { color: var(--muted); font-size: 14px; }
+form.ask { display: grid; gap: 10px; }
+textarea { width: 100%; min-height: 76px; resize: vertical; font: 15px/1.6 var(--body); color: var(--ink); background: var(--sheet);
+  border: 1px solid var(--rule); border-radius: 8px; padding: 10px 12px; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { font-size: 13px; padding: 7px 11px; border-radius: 999px; text-align: left; line-height: 1.4; }
+.note { font-size: 13px; color: var(--muted); }
+.answer { background: var(--sheet); border: 1px solid var(--rule); border-radius: 10px; padding: 16px 18px; display: grid; gap: 12px; min-width: 0; }
+.answer .q { font: 600 15px/1.5 var(--display); }
+.badge { font: 600 12px/1 var(--body); padding: 5px 9px; border-radius: 999px; justify-self: start; }
+.badge.answered { color: var(--ok); background: var(--ok-soft); }
+.badge.cannot_judge { color: var(--hold); background: var(--hold-soft); }
+.badge.check_needed, .badge.flag_missing { color: var(--check); background: var(--check-soft); }
+.answer .text { font-size: 15.5px; line-height: 1.8; text-wrap: pretty; }
+.answer .text sup a { font: 600 11px var(--mono); color: var(--accent); text-decoration: none; padding: 0 1px; }
+.warn { font-size: 13px; color: var(--check); background: var(--check-soft); border-radius: 6px; padding: 8px 10px; }
+.basis { font-size: 12.5px; color: var(--muted); }
+footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--rule); padding-top: 14px; display: grid; gap: 4px; }
+@media (max-width: 560px) {
+  .item { grid-template-columns: 1fr; }
+  .brand h1 { font-size: 23px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <h1>fineprint</h1>
+      <span class="tag">신용대출 약관을 조항 원문으로 읽어 드려요</span>
+      <span class="mode" id="mode"></span>
+    </div>
+  </header>
+
+  <div class="banks" id="banks" role="group" aria-label="은행 고르기"></div>
+  <div class="docs" id="docs"></div>
+
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tab-sum" aria-selected="true" aria-controls="p-sum">불리할 수 있는 조건</button>
+    <button role="tab" id="tab-ask" aria-selected="false" aria-controls="p-ask">물어보기</button>
+  </div>
+
+  <section class="panel" id="p-sum" role="tabpanel" aria-labelledby="tab-sum">
+    <p class="lede" id="sum-lede"></p>
+    <ul class="items" id="items"></ul>
+    <div class="check" id="check">
+      <div class="q">이 조건들, 이해되셨나요?</div>
+      <div class="row" id="check-row">
+        <button class="btn" data-v="yes" id="ck-yes">네, 이해했어요</button>
+        <button class="btn" data-v="unsure" id="ck-unsure">잘 모르겠는 게 있어요</button>
+      </div>
+      <div class="thanks" id="check-thanks" hidden></div>
+    </div>
+  </section>
+
+  <section class="panel" id="p-ask" role="tabpanel" aria-labelledby="tab-ask" hidden>
+    <form class="ask" id="ask">
+      <label for="question" class="lede">내 상황을 적어 주세요. 약관에서 근거 조항을 찾아 답하고, 근거가 없으면 판단할 수 없다고 말해요.</label>
+      <textarea id="question" placeholder="예: 이자 자동이체일인데 밤 9시에 돈을 넣었어요. 오늘 낸 걸로 처리되나요?"></textarea>
+      <div class="row">
+        <button class="btn primary" type="submit" id="ask-btn">물어보기</button>
+        <span class="note" id="ask-note"></span>
+      </div>
+    </form>
+    <div>
+      <div class="note" style="margin-bottom:6px">예시 질문</div>
+      <div class="chips" id="samples"></div>
+    </div>
+    <div id="answer"></div>
+  </section>
+
+  <footer>
+    <div>공개된 약관·약정서·상품설명서만 읽고 답해요. 금융 자문이나 상품 권유가 아니에요.</div>
+    <div>답은 수집한 문서의 시행일 기준이에요. 지금도 같은지는 은행에 확인해 주세요.</div>
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var S = null, bank = "토스뱅크";
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
+
+  function chunk(id) { return (S.chunks && S.chunks[id]) || { label: id, text: null }; }
+
+  function excerpts(ids, numbered) {
+    return '<div class="excerpts">' + ids.map(function (id, i) {
+      var c = chunk(id);
+      var where = esc(c.label || id);
+      var body = c.text ? "<p>" + esc(c.text) + "</p>" : '<p class="none">원문을 불러올 수 없어요. data/processed가 있는지 확인해 주세요.</p>';
+      return '<div class="excerpt" id="ref-' + (numbered ? numbered + "-" + (i + 1) : id) + '"><div class="where">' +
+        (numbered ? '<span class="n">[' + (i + 1) + "]</span>" : "") + where + "</div>" + body + "</div>";
+    }).join("") + "</div>";
+  }
+
+  function renderBanks() {
+    $("banks").innerHTML = S.banks.map(function (b) {
+      return '<button type="button" aria-pressed="' + (b.name === bank) + '" data-bank="' + esc(b.name) + '">' + esc(b.name) + "</button>";
+    }).join("");
+    var b = S.banks.filter(function (x) { return x.name === bank; })[0];
+    $("docs").innerHTML = (b && b.docs.length ? b.docs : []).map(function (d) {
+      return "<span><b>" + esc(d.layer) + "</b> " + esc(d.title) + ' <span class="ver">' + esc(d.version) + "</span></span>";
+    }).join("");
+  }
+
+  function renderSummary() {
+    var items = S.summaries[bank] || [];
+    $("sum-lede").textContent = bank + " 문서에서 대출받는 사람에게 불리할 수 있는 조건을 " + items.length + "줄로 모았어요. 줄마다 근거 조항 원문을 펼쳐 볼 수 있어요.";
+    $("items").innerHTML = items.map(function (it) {
+      return '<li class="item"><div class="topic">' + esc(it.topic) + '</div><div class="body"><div class="line">' + esc(it.line) +
+        '</div><details class="src"><summary>근거 원문 ' + it.chunk_ids.length + "개</summary>" + excerpts(it.chunk_ids) + "</details></div></li>";
+    }).join("");
+    $("check-row").hidden = false; $("check-thanks").hidden = true;
+  }
+
+  function renderSamples() {
+    var list = S.samples.filter(function (s) { return s.bank === bank || s.bank === "공통"; });
+    $("samples").innerHTML = list.map(function (s) {
+      return '<button type="button" class="chip" data-id="' + esc(s.id) + '">' + esc(s.question) + "</button>";
+    }).join("");
+  }
+
+  function renderAnswer(q, a) {
+    var key = "a" + Date.now();
+    var text = esc(a.text).replace(/\[(\d+)\]/g, function (_, n) { return '<sup><a href="#ref-' + key + "-" + n + '">[' + n + "]</a></sup>"; });
+    var ids = a.refs.map(function (r) { return r.chunk_id; });
+    (a.refs || []).forEach(function (r) { if (!S.chunks[r.chunk_id] && r.text !== undefined) S.chunks[r.chunk_id] = r; });
+    var versions = Array.from(new Set(a.refs.map(function (r) { return r.version; }))).sort();
+    $("answer").innerHTML = '<article class="answer"><div class="q">' + esc(q) + '</div><span class="badge ' + esc(a.status) + '">' + esc(a.status_label) +
+      '</span><div class="text">' + text + "</div>" +
+      (a.warnings && a.warnings.length ? '<div class="warn">' + a.warnings.map(esc).join("<br>") + "</div>" : "") +
+      (ids.length ? '<details class="src" open><summary>근거 원문 ' + ids.length + "개</summary>" + excerpts(ids, key) + "</details>" : "") +
+      (versions.length ? '<div class="basis">수집한 문서 기준 (시행일 ' + versions.map(esc).join(", ") + ")</div>" : "") + "</article>";
+  }
+
+  function setTab(which) {
+    var sum = which === "sum";
+    $("tab-sum").setAttribute("aria-selected", sum); $("tab-ask").setAttribute("aria-selected", !sum);
+    $("p-sum").hidden = !sum; $("p-ask").hidden = sum;
+    try { localStorage.setItem("fp-tab", which); } catch (e) {}
+  }
+
+  function renderAll() { renderBanks(); renderSummary(); renderSamples(); $("answer").innerHTML = ""; }
+
+  function boot(state) {
+    S = state;
+    $("mode").textContent = S.mode === "live" ? "실시간 답변" : "데모 · 예시 답만";
+    $("ask-note").textContent = S.mode === "live" ? "답을 만드는 데 20~40초쯤 걸려요." : "데모에서는 아래 예시 질문만 답할 수 있어요.";
+    try { bank = localStorage.getItem("fp-bank") || bank; } catch (e) {}
+    if (!S.banks.some(function (b) { return b.name === bank; })) bank = S.banks[0].name;
+    renderAll();
+    try { if (localStorage.getItem("fp-tab") === "ask") setTab("ask"); } catch (e) {}
+  }
+
+  $("banks").addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-bank]"); if (!b) return;
+    bank = b.getAttribute("data-bank"); try { localStorage.setItem("fp-bank", bank); } catch (err) {}
+    renderAll();
+  });
+  $("tab-sum").addEventListener("click", function () { setTab("sum"); });
+  $("tab-ask").addEventListener("click", function () { setTab("ask"); });
+
+  $("check-row").addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-v]"); if (!b) return;
+    var v = b.getAttribute("data-v");
+    $("check-row").hidden = true; $("check-thanks").hidden = false;
+    $("check-thanks").textContent = v === "yes" ? "알려 주셔서 고마워요." : "어떤 조건이 헷갈렸는지 '물어보기'에서 물어봐 주세요. 조항을 찾아 답해 드려요.";
+    if (S.mode === "live") fetch("api/feedback", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ kind: "summary_check", bank: bank, value: v }) }).catch(function () {});
+  });
+
+  $("samples").addEventListener("click", function (e) {
+    var c = e.target.closest(".chip"); if (!c) return;
+    var s = S.samples.filter(function (x) { return x.id === c.getAttribute("data-id"); })[0];
+    $("question").value = s.question; renderAnswer(s.question, s);
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    $("answer").scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+  });
+
+  $("ask").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var q = $("question").value.trim(); if (!q) return;
+    var hit = S.samples.filter(function (x) { return x.question === q; })[0];
+    if (hit) { renderAnswer(q, hit); return; }
+    if (S.mode !== "live") {
+      $("answer").innerHTML = '<article class="answer"><div class="q">' + esc(q) + '</div><div class="note">데모에서는 직접 쓴 질문에 답할 수 없어요. 위 예시 질문을 눌러 보세요. 실시간 답변은 로컬 서버에 API 키를 넣어 실행하면 돼요.</div></article>';
+      return;
+    }
+    $("ask-btn").disabled = true; $("ask-btn").textContent = "조항 찾는 중…";
+    fetch("api/ask", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question: q, bank: bank }) })
+      .then(function (r) { return r.json(); })
+      .then(function (a) {
+        if (a.error) throw new Error(a.error);
+        Object.keys(a.chunks || {}).forEach(function (k) { S.chunks[k] = a.chunks[k]; });
+        renderAnswer(q, a);
+      })
+      .catch(function (err) {
+        $("answer").innerHTML = '<article class="answer"><div class="q">' + esc(q) + '</div><div class="warn">답을 만들지 못했어요: ' + esc(err.message) + "</div></article>";
+      })
+      .finally(function () { $("ask-btn").disabled = false; $("ask-btn").textContent = "물어보기"; });
+  });
+
+  if (window.FINEPRINT_STATE) boot(window.FINEPRINT_STATE);
+  else fetch("api/state").then(function (r) { return r.json(); }).then(boot)
+    .catch(function () { $("sum-lede").textContent = "서버에서 데이터를 불러오지 못했어요. python app/server.py로 실행했는지 확인해 주세요."; });
+})();
+</script>

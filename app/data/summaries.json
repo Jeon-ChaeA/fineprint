@@ -1,0 +1,188 @@
+[
+ {
+  "bank": "토스뱅크",
+  "items": [
+   {
+    "topic": "금리가 오르는 조건",
+    "line": "변동금리는 금리변동주기마다 바뀌고, 조건변경·기한연장 때 가산금리가 다시 산정될 수 있음",
+    "chunk_ids": [
+     "toss_contract:제2조",
+     "toss_manual:p5#2"
+    ],
+    "unverified": []
+   },
+   {
+    "topic": "중도상환해약금",
+    "line": "대출 후 3년 이내 상환 시 해약금 부과, 잔여 3개월 미만이면 면제. 문서마다 다르게 적혀 있어 확인 필요(해약금 없다는 안내도 있음)",
+    "chunk_ids": [
+     "toss_manual:p2#1",
+     "toss_manual:p1#2",
+     "toss_manual:p9#1",
+     "toss_contract:제6조"
+    ],
+    "unverified": []
+   },
+   {
+    "topic": "연체이자",
+    "line": "대출금리에 연 3%를 더해 최고 연 15%, 대출금리가 연 15% 이상이면 연 2% 가산(설명서는 '초과'로 표기)",
+    "chunk_ids": [
+     "toss_contract:제4조",
+     "toss_manual:p7#3",
+     "toss_contract:제1조"
+    ],
+    "unverified": []
+   },
+   {
+    "topic": "한꺼번에 갚아야 하는 경우",
+    "line": "이자를 1개월 지체하거나 분할상환금을 2회 연속 지체하면 기한의 이익을 잃고 곧 갚아야 함",
+    "chunk_ids": [
+     "toss_basic:제7조②",
+     "toss_manual:p8#3"
+    ],
+    "unverified": []
+   },
+   {
+    "topic": "신용점수 영향",
+    "line": "원리금 5영업일 이상 연체 시 단기연체정보 제공, 3개월 이상이면 연체정보 등록. 계약만으로도 점수 하락 가능",
+    "chunk_ids": [
+     "toss_manual:p8#4",
+     "toss_manual:p9#1"
+    ],
+    "unverified": []
+   },
+   {
+    "topic": "만기 연장 조건",
+    "line": "만기일시상환만 연장 가능, 만기 전 앱 신청 필요. 신용상태에 따라 일부 상환·금리 변경 가능",
+    "chunk_ids": [
+     "toss_manual:p8#5",
+     "toss_manual:p1#2",
+     "toss_contract:제2조"
+    ],
+    "unverified": []
+   }
+  ],
+  "missing": []
+ },
+ {
+  "bank": "카카오뱅크",
+  "items": [
+   {
+    "topic": "금리가 오르는 조건",
+    "line": "변동금리는 금리변동주기마다 바뀌고, 조건변경·우대조건 미충족·기한연장 때 가산금리가 변경될 수 있음",
+    "chunk_ids": [
+     "kakao_contract:제2조⑤",
+     "kakao_contract:제2조①",
+     "kakao_manual:p6#0"
+    ],
+    "unverified": []
+   },
+   {
+    "topic": "중도상환해약금",
+    "line": "약정 기일 전에 갚으면 해약금 부과(잔여일수÷대출기간 비례). 잔여기간 3개월 미만이면 면제",
+    "chunk_ids": [
+     "kakao_contract:제5조①",
+     "kakao_contract:제5조③",
+     "kakao_manual:p2#0"
+    ],
+    "unverified": []
+   },
+   {
+    "topic": "연체이자",
+    "line": "대출금리에 연 3%를 더해 최고 연 15%, 대출금리가 연 15%보다 높으면 연 2% 가산. 일부 납부해도 연체 시작일은 그대로",
+    "chunk_ids": [
+     "kakao_manual:p9#0",
+     "kakao_contract:제3조③"
+    ],
+    "unverified": []
+   },
+   {
+    "topic": "한꺼번에 갚아야 하는 경우",
+    "line": "이자를 1개월 지체하거나 분할상환금을 2회 연속 지체하면 기한의 이익을 잃고 곧 갚아야 함",
+    "chunk_ids": [
+     "kakao_basic:제7조②",
+     "kakao_manual:p9#0"
+    ],
+    "unverified": []
+   },
+   {
+    "topic": "신용점수 영향",
+    "line": "원리금 5영업일 이상 연체 시 단기연체정보 제공, 3개월 이상이면 연체정보 등록. 계약만으로도 점수 하락 가능",
+    "chunk_ids": [
+     "kakao_manual:p9#5",
+     "kakao_manual:p10#1"
+    ],
+    "unverified": []
+   },
+   {
+    "topic": "만기 연장 조건",
+    "line": "만기일시상환만 앱 신청으로 연장 가능. 신용점수 하락·연체 시 일부 상환하거나 연장 거절, 거절되면 잔액 전부 상환",
+    "chunk_ids": [
+     "kakao_manual:p10#0",
+     "kakao_contract:제10조①"
+    ],
+    "unverified": []
+   }
+  ],
+  "missing": []
+ },
+ {
+  "bank": "하나은행",
+  "items": [
+   {
+    "topic": "금리가 오르는 조건",
+    "line": "변동금리는 기준금리가 바뀌면 대출금리가 변경됨(CD연동 3개월, COFIX연동 6/12개월마다). 인상 시 이자 부담 증가",
+    "chunk_ids": [
+     "hana_manual:p4#0",
+     "hana_manual:p4#1"
+    ],
+    "unverified": []
+   },
+   {
+    "topic": "중도상환해약금",
+    "line": "대출취급일로부터 3년까지 적용. 해약금률은 금리 유형·담보에 따라 다름",
+    "chunk_ids": [
+     "hana_manual:p4#6",
+     "hana_basic:제10조"
+    ],
+    "unverified": []
+   },
+   {
+    "topic": "연체이자",
+    "line": "대출이자율에 연 3%를 더해 적용, 최고 연 15%",
+    "chunk_ids": [
+     "hana_manual:p2#0"
+    ],
+    "unverified": []
+   },
+   {
+    "topic": "한꺼번에 갚아야 하는 경우",
+    "line": "이자 1개월 지체(주택담보 2개월), 분할상환금 2회 연속 지체(주택담보 3회)면 기한의 이익을 잃고 곧 갚아야 함",
+    "chunk_ids": [
+     "hana_basic:제7조②",
+     "hana_basic:제7조①"
+    ],
+    "unverified": []
+   },
+   {
+    "topic": "신용점수 영향",
+    "line": "3개월 이상 연체하면 7영업일 이내 연체정보 등록, 갚아 해제돼도 기록이 1년 남을 수 있음",
+    "chunk_ids": [
+     "hana_manual:p3#0",
+     "hana_manual:p3#1"
+    ],
+    "unverified": []
+   },
+   {
+    "topic": "만기 연장 조건",
+    "line": "대출 증가·연체정보 등록·신용평점 하락 시 기한 연장이 제한될 수 있음. 만기일시상환은 연장 안 될 수도 있음",
+    "chunk_ids": [
+     "hana_manual:p3#1",
+     "hana_manual:p3#6",
+     "hana_manual:p3#0"
+    ],
+    "unverified": []
+   }
+  ],
+  "missing": []
+ }
+]
