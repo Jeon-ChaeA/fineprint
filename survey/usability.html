@@ -248,6 +248,19 @@ async function submit(){
 
 render(); show(0);
 
+/* 5명이 모이면 마감한다. 서버(Apps Script)에 마감 여부를 묻고, 마감이면 질문 대신 안내를 보여 준다. */
+fetch(ENDPOINT + "?status=usability").then(r => r.json()).then(st => {
+  if (st && st.open === false) {
+    form.classList.add("hidden"); $("#nav").classList.add("hidden");
+    $("#bar").style.width = "100%"; $("#stepCount").textContent = "마감";
+    const d = $("#done");
+    d.innerHTML = `<h2>설문이 마감되었어요</h2>
+      <p class="lead">필요한 인원이 모두 모여 응답을 마감했어요. 써 봐 주셔서 정말 고마워요.</p>
+      <p class="lead" style="margin:0"><a href="https://github.com/Jeon-ChaeA/fineprint">fineprint 프로젝트 보러 가기</a></p>`;
+    d.classList.remove("hidden");
+  }
+}).catch(() => {});
+
 form.addEventListener("change", e => {
   const t = e.target;
   if (t.value === "__other" || t.type === "radio" || t.type === "checkbox"){

@@ -22,6 +22,8 @@ const USABILITY_FIELDS = [
   'understood_check', 'used_samples', 'tried_own_question', 'own_question', 'cannot_judge_feel',
   'summary_vs_ask', 'would_use', 'one_fix', 'ua_mobile'
 ];
+// 사용성 테스트는 5명에서 마감한다. 이후 응답은 저장하지 않고, 설문 페이지는 마감 안내를 보여 준다.
+const USABILITY_LIMIT = 5;
 
 function doPost(e) {
   const lock = LockService.getScriptLock();
@@ -37,6 +39,7 @@ function doPost(e) {
     const name = usability ? 'usability' : 'responses';
     const fields = usability ? USABILITY_FIELDS : FIELDS;
     const sh = sheet_(ss, name, ['received_at'].concat(fields));
+    if (usability && sh.getLastRow() - 1 >= USABILITY_LIMIT) return json_({ ok: false, closed: true });
     sh.appendRow([now].concat(fields.map(function (k) { return clean_(data[k]); })));
 
     return ok_();
@@ -48,7 +51,13 @@ function doPost(e) {
   }
 }
 
-function doGet() {
+function doGet(e) {
+  // 설문 페이지가 열릴 때 마감 여부를 묻는다: ?status=usability
+  if (e && e.parameter && e.parameter.status === 'usability') {
+    const sh = SpreadsheetApp.openById(SHEET_ID).getSheetByName('usability');
+    const count = sh ? Math.max(0, sh.getLastRow() - 1) : 0;
+    return json_({ open: count < USABILITY_LIMIT, count: count, limit: USABILITY_LIMIT });
+  }
   return ContentService.createTextOutput('fineprint survey endpoint is running.');
 }
 
@@ -79,6 +88,10 @@ function clean_(v) {
 }
 
 function ok_() {
-  return ContentService.createTextOutput(JSON.stringify({ ok: true }))
+  return json_({ ok: true });
+}
+
+function json_(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
 }
