@@ -40,6 +40,7 @@
 
 - 같은 Apps Script 웹 앱이 `form: "usability"`인 응답을 `usability` 시트에 따로 저장한다.
 - 설문 페이지: [survey/usability.html](../../survey/usability.html), 계획: [usability/README.md](../usability/README.md)
+- 2026-10-27 설정 완료: Apps Script 배포 버전 2(웹 앱 주소는 그대로), `usability` 시트 생성, Netlify에 `usability.html` 배포(https://fineprint-survey.netlify.app/usability.html). 시험 응답 1건을 보내 `usability` 시트에 들어오는 것을 확인하고 지웠다.
 
 ## 이전 방식
 
