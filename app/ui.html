@@ -102,6 +102,29 @@ textarea { width: 100%; min-height: 76px; resize: vertical; font: 15px/1.6 var(-
 .task .row { justify-content: space-between; }
 .task a.btn { text-decoration: none; display: inline-block; }
 .task .fold { background: transparent; border: 0; color: var(--muted); font-size: 13px; padding: 4px 0; cursor: pointer; }
+button.term { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: help;
+  text-decoration: underline dotted var(--accent); text-decoration-thickness: 1.5px; text-underline-offset: 4px; }
+button.term[aria-expanded="true"] { background: var(--accent-soft); border-radius: 3px; }
+.gloss { background: var(--accent-soft); border: 1px solid var(--rule); border-radius: 8px; padding: 10px 12px; display: grid; gap: 6px; font-size: 14px; line-height: 1.7; min-width: 0; }
+.gloss .head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.gloss .head b { font: 700 14.5px var(--display); }
+.gloss .kind { font: 600 11px/1 var(--body); color: var(--muted); border: 1px solid var(--rule); border-radius: 999px; padding: 4px 7px; background: var(--sheet); }
+.gloss .close { margin-left: auto; background: none; border: 0; color: var(--muted); font-size: 13px; cursor: pointer; padding: 2px 4px; }
+.gloss .other { font-size: 12.5px; color: var(--muted); }
+.gloss .excerpt p { max-height: 10em; }
+.terms .chip.term { background: var(--sheet); border: 1px solid var(--rule); border-radius: 999px; padding: 7px 11px; text-decoration: none; cursor: pointer; font-size: 13px; }
+.terms .chip.term[aria-expanded="true"] { background: var(--accent-soft); border-color: var(--accent); }
+/* 근거 원문과 같은 줄 오른쪽 끝에 흐리게 둔다 */
+.item .acts { position: relative; }
+.ask-this { position: absolute; top: 0; right: 0; font: 500 13px/1.7 var(--body); color: var(--muted); background: none; border: 0; padding: 0 0 0 12px; cursor: pointer; }
+.ask-this:hover, .ask-this:focus-visible { color: var(--accent); }
+.ctx { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 13px; }
+.ctx b { font-weight: 600; color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: 4px 10px; }
+.ctx button { background: none; border: 0; color: var(--muted); font-size: 12.5px; cursor: pointer; padding: 2px 4px; }
+.chip.rel { border-color: var(--accent); }
+.go-ask { border-top: 1px solid var(--rule); padding-top: 10px; justify-content: space-between; }
+.hint { font-size: 12.5px; color: var(--muted); }
+.terms { display: flex; gap: 6px; flex-wrap: wrap; }
 footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--rule); padding-top: 14px; display: grid; gap: 4px; }
 @media (max-width: 560px) {
   .item { grid-template-columns: 1fr; }
@@ -143,6 +166,7 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--rul
 
   <section class="panel" id="p-sum" role="tabpanel" aria-labelledby="tab-sum">
     <p class="lede" id="sum-lede"></p>
+    <p class="hint">점선 밑줄이 있는 말은 눌러서 뜻을 볼 수 있어요.</p>
     <ul class="items" id="items"></ul>
     <div class="check" id="check">
       <div class="q">이 조건들, 이해되셨나요?</div>
@@ -151,20 +175,25 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--rul
         <button class="btn" data-v="unsure" id="ck-unsure">잘 모르겠는 게 있어요</button>
       </div>
       <div class="thanks" id="check-thanks" hidden></div>
+      <div id="check-terms" hidden></div>
+      <div class="row go-ask"><span class="note">궁금한 조건이 있으면 내 상황으로 물어볼 수 있어요.</span>
+        <button type="button" class="btn primary" id="go-ask">물어보기로 가기 →</button></div>
     </div>
   </section>
 
   <section class="panel" id="p-ask" role="tabpanel" aria-labelledby="tab-ask" hidden>
     <form class="ask" id="ask">
       <label for="question" class="lede">내 상황을 적어 주세요. 약관에서 근거 조항을 찾아 답하고, 근거가 없으면 판단할 수 없다고 말해요.</label>
+      <div class="ctx" id="ctx" hidden><span>주제</span><b id="ctx-topic"></b><button type="button" id="ctx-clear">주제 지우기</button></div>
       <textarea id="question" placeholder="예: 이자 자동이체일인데 밤 9시에 돈을 넣었어요. 오늘 낸 걸로 처리되나요?"></textarea>
       <div class="row">
         <button class="btn primary" type="submit" id="ask-btn">물어보기</button>
         <span class="note" id="ask-note"></span>
       </div>
+      <div class="note" id="privacy-note" hidden>질문은 답을 만들기 위해 Google Gemini로 보내지고, Google이 서비스 개선에 쓸 수 있어요. 이름·연락처·계좌번호 같은 개인정보는 적지 말아 주세요. 이 서버는 질문 내용을 저장하지 않아요.</div>
     </form>
     <div>
-      <div class="note" style="margin-bottom:6px">예시 질문</div>
+      <div class="note" style="margin-bottom:6px" id="samples-title">예시 질문</div>
       <div class="chips" id="samples"></div>
     </div>
     <div id="answer"></div>
@@ -195,6 +224,65 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--rul
     }).join("") + "</div>";
   }
 
+  // 용어 풀이: 별칭이 긴 것부터 맞춘다. 한 덩어리(요약 한 줄, 답 하나)에서 용어마다 처음 한 번만 표시한다.
+  var termRe = null, termOf = {};
+  function initGlossary() {
+    var al = [];
+    (S.glossary || []).forEach(function (t, i) { t.aliases.forEach(function (a) { termOf[a] = i; al.push(a); }); });
+    al.sort(function (a, b) { return b.length - a.length; });
+    termRe = al.length ? new RegExp(al.map(function (a) { return a.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }).join("|"), "g") : null;
+  }
+  function rich(raw, piece) {
+    piece = piece || esc;
+    if (!termRe) return piece(raw);
+    var out = "", last = 0, used = {}, m;
+    termRe.lastIndex = 0;
+    while ((m = termRe.exec(raw))) {
+      var i = termOf[m[0]];
+      if (used[i]) continue;
+      used[i] = true;
+      out += piece(raw.slice(last, m.index)) + '<button type="button" class="term" data-term="' + i + '" aria-expanded="false">' + esc(m[0]) + "</button>";
+      last = m.index + m[0].length;
+    }
+    return out + piece(raw.slice(last));
+  }
+  function glossBox(i) {
+    var t = S.glossary[i], order = [bank].concat(S.banks.map(function (b) { return b.name; }).filter(function (n) { return n !== bank; }));
+    var from = order.filter(function (b) { return t.sources[b]; })[0], c = from ? chunk(t.sources[from]) : null;
+    return '<div class="gloss" role="region" aria-label="' + esc(t.term) + ' 뜻"><div class="head"><b>' + esc(t.term) + '</b><span class="kind">' + esc(t.kind) +
+      '</span><button type="button" class="close" aria-label="닫기">닫기</button></div><div>' + esc(t.plain) + "</div>" +
+      (c ? '<details class="src"><summary>근거 원문</summary>' + (from !== bank ? '<div class="other">' + esc(bank) + " 문서에는 이 말의 풀이가 없어서 " + esc(from) + " 문서를 보여 드려요.</div>" : "") +
+        snippet(c, t.at ? t.at[from] : 0) + "</details>" : "") + "</div>";
+  }
+  // 근거 조각에서 풀이의 근거 문장 근처만 보여 준다
+  function snippet(c, at) {
+    var body;
+    if (!c.text) body = '<p class="none">원문을 불러올 수 없어요.</p>';
+    else {
+      var a = Math.max(0, (at || 0) - 60), z = Math.min(c.text.length, (at || 0) + 260);
+      var cut = c.text.lastIndexOf(" ", a); if (a > 0 && cut > a - 20) a = cut + 1;
+      body = "<p>" + (a > 0 ? "… " : "") + esc(c.text.slice(a, z)) + (z < c.text.length ? " …" : "") + "</p>";
+    }
+    return '<div class="excerpts"><div class="excerpt"><div class="where">' + esc(c.label || "") + "</div>" + body + "</div></div>";
+  }
+  function toggleGloss(btn) {
+    var host = btn.closest(".line, .text, #check-terms"), open = btn.getAttribute("aria-expanded") === "true";
+    var prev = host.nextElementSibling;
+    if (prev && prev.classList.contains("gloss")) prev.remove();
+    host.querySelectorAll("button.term").forEach(function (b) { b.setAttribute("aria-expanded", "false"); });
+    if (open) return;
+    btn.setAttribute("aria-expanded", "true");
+    host.insertAdjacentHTML("afterend", glossBox(+btn.getAttribute("data-term")));
+  }
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest("button.term");
+    if (b) { toggleGloss(b); return; }
+    var x = e.target.closest(".gloss .close");
+    if (x) { var g = x.closest(".gloss"), host = g.previousElementSibling;
+      host.querySelectorAll('button.term[aria-expanded="true"]').forEach(function (t) { t.setAttribute("aria-expanded", "false"); t.focus(); });
+      g.remove(); }
+  });
+
   function renderBanks() {
     $("banks").innerHTML = S.banks.map(function (b) {
       return '<button type="button" aria-pressed="' + (b.name === bank) + '" data-bank="' + esc(b.name) + '">' + esc(b.name) + "</button>";
@@ -209,22 +297,49 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--rul
     var items = S.summaries[bank] || [];
     $("sum-lede").textContent = bank + " 문서에서 대출받는 사람에게 불리할 수 있는 조건을 " + items.length + "줄로 모았어요. 줄마다 근거 조항 원문을 펼쳐 볼 수 있어요.";
     $("items").innerHTML = items.map(function (it) {
-      return '<li class="item"><div class="topic">' + esc(it.topic) + '</div><div class="body"><div class="line">' + esc(it.line) +
-        '</div><details class="src"><summary>근거 원문 ' + it.chunk_ids.length + "개</summary>" + excerpts(it.chunk_ids) + "</details></div></li>";
+      return '<li class="item"><div class="topic">' + esc(it.topic) + '</div><div class="body"><div class="line">' + rich(it.line) +
+        '</div><div class="acts"><details class="src"><summary>근거 원문 ' + it.chunk_ids.length + "개</summary>" + excerpts(it.chunk_ids) +
+        '</details><button type="button" class="ask-this" data-topic="' + esc(it.topic) + '" aria-label="이 조건 물어보기">물어보기 →</button></div></div></li>';
     }).join("");
-    $("check-row").hidden = false; $("check-thanks").hidden = true;
+    $("check-row").hidden = false; $("check-thanks").hidden = true; $("check-terms").hidden = true;
   }
+
+  // 요약 주제별 예시 질문과 입력 안내 (요약 줄의 "이 조건 물어보기"에서 쓴다)
+  var TOPIC_SAMPLES = { "중도상환해약금": ["Q09"], "금리가 오르는 조건": ["Q29"], "신용점수 영향": ["Q19", "L06"],
+    "만기 연장 조건": ["Q31"], "한꺼번에 갚아야 하는 경우": ["L09", "H03", "J09"], "연체이자": ["J04"] };
+  var TOPIC_HINT = {
+    "금리가 오르는 조건": "예: 대출 중에 기준금리가 오르면 언제부터 이자가 늘어나나요?",
+    "중도상환해약금": "예: 대출받고 1년 안에 다 갚으면 해약금이 얼마나 되나요?",
+    "연체이자": "예: 이자를 3일 늦게 내면 연체이자가 얼마나 붙나요?",
+    "한꺼번에 갚아야 하는 경우": "예: 이자를 하루만 늦게 내도 남은 대출을 한꺼번에 갚아야 하나요?",
+    "신용점수 영향": "예: 연체한 돈을 다 갚으면 신용점수가 바로 돌아오나요?",
+    "만기 연장 조건": "예: 만기 연장을 신청하면 금리나 한도가 바뀌나요?" };
+  var DEFAULT_HINT = "예: 이자 자동이체일인데 밤 9시에 돈을 넣었어요. 오늘 낸 걸로 처리되나요?";
+  var topic = null;
 
   function renderSamples() {
     var list = S.samples.filter(function (s) { return s.bank === bank || s.bank === "공통"; });
+    var rel = topic ? (TOPIC_SAMPLES[topic] || []) : [];
+    list.sort(function (a, b) { return (rel.indexOf(a.id) < 0) - (rel.indexOf(b.id) < 0); });
+    var nRel = list.filter(function (s) { return rel.indexOf(s.id) >= 0; }).length;
+    $("samples-title").textContent = nRel ? "예시 질문 (위 " + nRel + "개는 '" + topic + "' 관련)" : "예시 질문";
     $("samples").innerHTML = list.map(function (s) {
-      return '<button type="button" class="chip" data-id="' + esc(s.id) + '">' + esc(s.question) + "</button>";
+      return '<button type="button" class="chip' + (rel.indexOf(s.id) >= 0 ? " rel" : "") + '" data-id="' + esc(s.id) + '">' + esc(s.question) + "</button>";
     }).join("");
+  }
+
+  function setTopic(t) {
+    topic = t;
+    $("ctx").hidden = !t; $("ctx-topic").textContent = t || "";
+    $("question").placeholder = (t && TOPIC_HINT[t]) || DEFAULT_HINT;
+    renderSamples();
   }
 
   function renderAnswer(q, a) {
     var key = "a" + Date.now();
-    var text = esc(a.text).replace(/\[(\d+)\]/g, function (_, n) { return '<sup><a href="#ref-' + key + "-" + n + '">[' + n + "]</a></sup>"; });
+    var text = rich(a.text, function (part) {
+      return esc(part).replace(/\[(\d+)\]/g, function (_, n) { return '<sup><a href="#ref-' + key + "-" + n + '">[' + n + "]</a></sup>"; });
+    });
     var ids = a.refs.map(function (r) { return r.chunk_id; });
     (a.refs || []).forEach(function (r) { if (!S.chunks[r.chunk_id] && r.text !== undefined) S.chunks[r.chunk_id] = r; });
     var versions = Array.from(new Set(a.refs.map(function (r) { return r.version; }))).sort();
@@ -242,12 +357,14 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--rul
     try { localStorage.setItem("fp-tab", which); } catch (e) {}
   }
 
-  function renderAll() { renderBanks(); renderSummary(); renderSamples(); $("answer").innerHTML = ""; }
+  function renderAll() { renderBanks(); renderSummary(); setTopic(null); $("answer").innerHTML = ""; }
 
   function boot(state) {
     S = state;
+    initGlossary();
     $("mode").textContent = S.mode === "live" ? "실시간 답변" : "데모 · 예시 답만";
-    $("ask-note").textContent = S.mode === "live" ? "답을 만드는 데 20~40초쯤 걸려요." : "데모에서는 아래 예시 질문만 답할 수 있어요.";
+    $("ask-note").textContent = S.mode === "live" ? "답을 만드는 데 20초쯤 걸려요. 질문은 10분에 5개까지 할 수 있어요." : "데모에서는 아래 예시 질문만 답할 수 있어요.";
+    $("privacy-note").hidden = S.provider !== "gemini";
     try { bank = localStorage.getItem("fp-bank") || bank; } catch (e) {}
     if (!S.banks.some(function (b) { return b.name === bank; })) bank = S.banks[0].name;
     renderAll();
@@ -261,12 +378,36 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--rul
   });
   $("tab-sum").addEventListener("click", function () { setTab("sum"); });
   $("tab-ask").addEventListener("click", function () { setTab("ask"); });
+  // 요약 끝의 확인 칸에서 물어보기 입력창으로 바로 이동
+  function openAsk() {
+    setTab("ask");
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    document.querySelector(".tabs").scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    $("question").focus({ preventScroll: true });
+  }
+  $("go-ask").addEventListener("click", function () { setTopic(null); openAsk(); });
+  $("items").addEventListener("click", function (e) {
+    var b = e.target.closest(".ask-this"); if (!b) return;
+    setTopic(b.getAttribute("data-topic")); $("answer").innerHTML = ""; openAsk();
+  });
+  $("ctx-clear").addEventListener("click", function () { setTopic(null); $("question").focus(); });
 
   $("check-row").addEventListener("click", function (e) {
     var b = e.target.closest("button[data-v]"); if (!b) return;
     var v = b.getAttribute("data-v");
     $("check-row").hidden = true; $("check-thanks").hidden = false;
-    $("check-thanks").textContent = v === "yes" ? "알려 주셔서 고마워요." : "어떤 조건이 헷갈렸는지 '물어보기'에서 물어봐 주세요. 조항을 찾아 답해 드려요.";
+    $("check-thanks").textContent = v === "yes" ? "알려 주셔서 고마워요." : "어려운 말이 있었다면 아래에서 뜻을 볼 수 있어요. 그래도 헷갈리면 아래 버튼으로 물어봐 주세요.";
+    if (v !== "yes") {
+      // 지금 은행 요약에 나온 용어만 모아 보여 준다
+      var seen = {}, list = [];
+      (S.summaries[bank] || []).forEach(function (it) {
+        if (!termRe) return; termRe.lastIndex = 0; var m;
+        while ((m = termRe.exec(it.line))) { var i = termOf[m[0]]; if (!seen[i]) { seen[i] = 1; list.push(i); } }
+      });
+      $("check-terms").innerHTML = list.length ? '<div class="terms">' + list.map(function (i) {
+        return '<button type="button" class="chip term" data-term="' + i + '" aria-expanded="false">' + esc(S.glossary[i].term) + "</button>"; }).join("") + "</div>" : "";
+      $("check-terms").hidden = !list.length;
+    }
     if (S.mode === "live") fetch("api/feedback", { method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ kind: "summary_check", bank: bank, value: v }) }).catch(function () {});
   });
@@ -274,7 +415,7 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--rul
   $("samples").addEventListener("click", function (e) {
     var c = e.target.closest(".chip"); if (!c) return;
     var s = S.samples.filter(function (x) { return x.id === c.getAttribute("data-id"); })[0];
-    $("question").value = s.question; renderAnswer(s.question, s);
+    renderAnswer(s.question, s);  // 입력창은 건드리지 않는다 (사용성 테스트 의견)
     var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     $("answer").scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
   });
@@ -289,7 +430,7 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--rul
       return;
     }
     $("ask-btn").disabled = true; $("ask-btn").textContent = "조항 찾는 중…";
-    fetch("api/ask", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question: q, bank: bank }) })
+    fetch("api/ask", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question: topic ? "(" + topic + " 관련) " + q : q, bank: bank }) })
       .then(function (r) { return r.json(); })
       .then(function (a) {
         if (a.error) throw new Error(a.error);

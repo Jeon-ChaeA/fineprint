@@ -260,7 +260,9 @@ class Agent:
         return Answer(status, text, cites, labels, invalid, [w.text() for w in ctx.warnings], raw, cids)
 
     def generate(self, system: str, user: str, model: str | None = None) -> str:
-        """Anthropic API로 답을 만든다. ANTHROPIC_API_KEY가 필요하다."""
+        """LLM으로 답을 만든다. 어느 쪽을 쓸지는 provider()가 정한다."""
+        if provider() == "gemini":
+            return gemini_generate(system, user, model or os.environ.get("FINEPRINT_MODEL", GEMINI_DEFAULT))
         import anthropic  # 선택 의존성
 
         client = anthropic.Anthropic()
@@ -281,3 +283,54 @@ class Agent:
             return self.parse(ctx, draft)
         system, user = self.review_prompt(ctx, draft)
         return self.parse(ctx, self.generate(system, user, model))
+
+
+# --- LLM 공급자 -------------------------------------------------------------
+# 평가(1.0~1.6)는 Claude로 했다. 공개 데모의 실시간 답변은 무료인 Gemini API로 돌린다(D-010).
+GEMINI_DEFAULT = "gemini-flash-latest"
+GEMINI_URL = os.environ.get("FINEPRINT_GEMINI_URL",  # 시험용으로 바꿀 수 있다
+                            "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent")
+
+
+def provider() -> str | None:
+    """FINEPRINT_LLM(gemini|anthropic)을 따르고, 없으면 있는 키로 고른다. 키가 없으면 None."""
+    want = os.environ.get("FINEPRINT_LLM", "").lower()
+    if want in ("gemini", "anthropic"):
+        return want
+    if os.environ.get("GEMINI_API_KEY"):
+        return "gemini"
+    if os.environ.get("ANTHROPIC_API_KEY"):
+        return "anthropic"
+    return None
+
+
+def gemini_generate(system: str, user: str, model: str, retries: int = 2) -> str:
+    """Gemini REST API를 표준 라이브러리로 부른다. 429·5xx는 잠깐 기다렸다 다시 한다."""
+    import time
+    import urllib.error
+    import urllib.request
+
+    body = json.dumps({
+        "system_instruction": {"parts": [{"text": system}]},
+        "contents": [{"role": "user", "parts": [{"text": user}]}],
+        "generationConfig": {"temperature": 0.2, "maxOutputTokens": 8192},
+    }).encode("utf-8")
+    req = urllib.request.Request(GEMINI_URL.format(model=model), data=body, method="POST", headers={
+        "Content-Type": "application/json", "x-goog-api-key": os.environ["GEMINI_API_KEY"]})
+    for attempt in range(retries + 1):
+        try:
+            with urllib.request.urlopen(req, timeout=90) as r:
+                data = json.loads(r.read().decode("utf-8"))
+            break
+        except urllib.error.HTTPError as e:
+            if attempt < retries and (e.code == 429 or e.code >= 500):
+                time.sleep(5 * (attempt + 1))
+                continue
+            detail = e.read().decode("utf-8", "replace")[:300]
+            raise RuntimeError(f"Gemini {e.code}: {detail}") from None
+    cand = (data.get("candidates") or [{}])[0]
+    parts = (cand.get("content") or {}).get("parts") or []
+    text = "".join(p.get("text", "") for p in parts if not p.get("thought"))
+    if not text:
+        raise RuntimeError(f"Gemini가 빈 답을 줬어요 (finishReason={cand.get('finishReason')})")
+    return text

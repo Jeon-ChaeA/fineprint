@@ -1,8 +1,13 @@
 """fineprint 소비자용 프로토타입 서버 (표준 라이브러리만 씀).
 
     python app/server.py            → http://localhost:8000
-    ANTHROPIC_API_KEY가 있으면 직접 쓴 질문에 실시간으로 답한다(초안 → 점검, 문항당 LLM 2번).
+    GEMINI_API_KEY(또는 ANTHROPIC_API_KEY)가 있으면 직접 쓴 질문에 실시간으로 답한다(초안 → 점검, 문항당 LLM 2번).
     없으면 데모 모드: 요약과 예시 질문의 답만 보여 준다.
+
+공개 배포용 설정(환경 변수)
+    PORT                     호스팅이 정해 주면 0.0.0.0에 연다
+    FINEPRINT_DAILY_LIMIT    하루 질문 수 상한 (기본 100, 한국 시간 자정에 초기화)
+    FINEPRINT_IP_LIMIT       한 사람(IP)이 10분에 할 수 있는 질문 수 (기본 5)
 
 조항 원문은 로컬 data/processed에서 읽는다(레포에 없음). 이해 확인 응답은 app/feedback.local.jsonl에 쌓인다.
 """
@@ -11,7 +16,10 @@ from __future__ import annotations
 import json
 import os
 import sys
-from datetime import datetime
+import threading
+import time
+from collections import defaultdict, deque
+from datetime import datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -21,10 +29,38 @@ sys.path.insert(0, str(HERE.parent))
 
 import state  # noqa: E402
 from fineprint.present import answer as present  # noqa: E402
+from fineprint.agent import provider  # noqa: E402
 from fineprint.retrieve import detect_banks  # noqa: E402
 
 AGENT = state.load_agent()
-LIVE = bool(os.environ.get("ANTHROPIC_API_KEY")) and AGENT is not None
+PROVIDER = provider()
+LIVE = PROVIDER is not None and AGENT is not None
+
+# 무료 API 한도와 남용을 막는 간단한 제한 (메모리에만 둔다, 질문 내용은 저장하지 않는다)
+KST = timezone(timedelta(hours=9))
+DAILY_LIMIT = int(os.environ.get("FINEPRINT_DAILY_LIMIT", 100))
+IP_LIMIT = int(os.environ.get("FINEPRINT_IP_LIMIT", 5))
+_lock = threading.Lock()
+_day = {"date": None, "count": 0}
+_ips: dict[str, deque] = defaultdict(deque)
+
+
+def allow(ip: str) -> str | None:
+    """질문을 받아도 되면 None, 아니면 사용자에게 보여 줄 이유."""
+    now, today = time.time(), datetime.now(KST).date()
+    with _lock:
+        if _day["date"] != today:
+            _day.update(date=today, count=0)
+        if _day["count"] >= DAILY_LIMIT:
+            return "오늘 받을 수 있는 질문 수를 다 썼어요. 내일 다시 물어봐 주세요. 예시 질문의 답은 계속 볼 수 있어요."
+        q = _ips[ip]
+        while q and now - q[0] > 600:
+            q.popleft()
+        if len(q) >= IP_LIMIT:
+            return "질문이 많아 잠깐 쉬어 가요. 10분쯤 뒤에 다시 물어봐 주세요."
+        q.append(now)
+        _day["count"] += 1
+    return None
 PAGE = ("<!doctype html><html lang=\"ko\"><head><meta charset=\"utf-8\">"
         "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover\">"
         "<style>[hidden]{display:none!important}</style></head><body>")
@@ -58,22 +94,38 @@ class Handler(BaseHTTPRequestHandler):
             html = PAGE + (HERE / "ui.html").read_text(encoding="utf-8") + "</body></html>"
             self._send(200, html.encode("utf-8"), "text/html; charset=utf-8")
         elif self.path == "/api/state":
-            self._json(state.build(AGENT, LIVE))
+            self._json(state.build(AGENT, LIVE) | {"provider": PROVIDER if LIVE else None})
+        elif self.path == "/healthz":
+            self._send(200, b"ok", "text/plain")
         else:
             self._send(404, b"not found", "text/plain")
 
     def do_POST(self):
-        data = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
+        n = int(self.headers.get("Content-Length", 0) or 0)
+        if n > 8000:
+            return self._json({"error": "요청이 너무 커요."}, 413)
+        try:
+            data = json.loads(self.rfile.read(n) or b"{}")
+        except json.JSONDecodeError:
+            return self._json({"error": "요청 형식이 잘못됐어요."}, 400)
         if self.path == "/api/ask":
             if not LIVE:
-                return self._json({"error": "API 키가 없어 데모 모드예요. ANTHROPIC_API_KEY를 넣고 다시 실행해 주세요."}, 400)
+                return self._json({"error": "API 키가 없어 데모 모드예요. GEMINI_API_KEY를 넣고 다시 실행해 주세요."}, 400)
             q = (data.get("question") or "").strip()[:500]
             if not q:
                 return self._json({"error": "질문이 비어 있어요."}, 400)
+            ip = (self.headers.get("X-Forwarded-For") or self.client_address[0]).split(",")[0].strip()
+            why = allow(ip)
+            if why:
+                return self._json({"error": why}, 429)
+            bank = data.get("bank") if data.get("bank") in state.BANKS else "토스뱅크"
             try:
-                self._json(ask(q, data.get("bank") or "토스뱅크"))
-            except Exception as e:  # LLM 호출 실패 등
-                self._json({"error": f"{type(e).__name__}: {e}"}, 500)
+                self._json(ask(q, bank))
+            except Exception as e:  # LLM 호출 실패 등. 자세한 내용은 서버 로그에만
+                print(f"[ask error] {type(e).__name__}: {str(e)[:300]}", flush=True)
+                busy = "429" in str(e)
+                self._json({"error": "지금 답을 만드는 곳이 붐벼요. 잠시 뒤 다시 물어봐 주세요." if busy
+                            else "답을 만들다 문제가 생겼어요. 잠시 뒤 다시 물어봐 주세요."}, 503 if busy else 500)
         elif self.path == "/api/feedback":
             rec = {"at": datetime.now().isoformat(timespec="seconds"), **{k: data.get(k) for k in ("kind", "bank", "value")}}
             with open(HERE / "feedback.local.jsonl", "a", encoding="utf-8") as f:
@@ -88,10 +140,11 @@ class Handler(BaseHTTPRequestHandler):
 
 def main():
     port = int(os.environ.get("PORT", 8000))
+    host = "0.0.0.0" if "PORT" in os.environ else "127.0.0.1"  # 호스팅에서는 밖에서 들어오게
     if AGENT is None:
         print("data/processed가 없어 조항 원문과 실시간 답변을 쓸 수 없어요. 요약·예시 답의 표기만 보여 줘요.")
-    print(f"fineprint {'실시간' if LIVE else '데모'} 모드 → http://localhost:{port}")
-    ThreadingHTTPServer(("127.0.0.1", port), Handler).serve_forever()
+    print(f"fineprint {'실시간(' + PROVIDER + ')' if LIVE else '데모'} 모드 → http://localhost:{port}", flush=True)
+    ThreadingHTTPServer((host, port), Handler).serve_forever()
 
 
 if __name__ == "__main__":

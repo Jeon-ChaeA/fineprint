@@ -24,6 +24,7 @@ import argparse
 import json
 import re
 import sys
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -161,11 +162,20 @@ def cmd_generate(args):
     run = Path(args.run)
     name = "review_prompts.jsonl" if args.stage == "review" else "prompts.jsonl"
     prompts = [json.loads(l) for l in open(run / name, encoding="utf-8")]
-    with open(run / "answers.jsonl", "w", encoding="utf-8") as f:
+    out = run / args.answers
+    done = set()
+    if args.resume and out.exists():  # 무료 API 한도에 걸려 멈췄을 때 이어서 한다
+        done = {json.loads(l)["id"] for l in open(out, encoding="utf-8") if l.strip()}
+    with open(out, "a" if args.resume else "w", encoding="utf-8") as f:
         for p in prompts:
+            if p["id"] in done:
+                continue
             raw = agent.generate(p["system"], p["user"], args.model)
             f.write(json.dumps({"id": p["id"], "raw": raw}, ensure_ascii=False) + "\n")
-            print(p["id"], "done")
+            f.flush()
+            print(p["id"], "done", flush=True)
+            if args.sleep:
+                time.sleep(args.sleep)
 
 
 def cmd_score(args):
@@ -292,6 +302,8 @@ def main():
     ap.add_argument("--model", default=None)
     ap.add_argument("--answers", default="answers.jsonl", help="review·score: 읽을 답 파일 (여러 번 돌릴 때 answers_r2.jsonl 등)")
     ap.add_argument("--tag", default="", help="review·score: 출력 파일 이름 뒤에 붙일 표시 (예: _r2)")
+    ap.add_argument("--resume", action="store_true", help="generate: 이미 만든 답은 건너뛰고 이어서 만든다")
+    ap.add_argument("--sleep", type=float, default=0, help="generate: 호출 사이에 쉬는 초 (무료 API 분당 한도)")
     ap.add_argument("--verbose", action="store_true", help="recall: 근거를 다 못 가져온 문항을 출력")
     args = ap.parse_args()
     {"prompts": cmd_prompts, "review": cmd_review, "generate": cmd_generate, "score": cmd_score,
