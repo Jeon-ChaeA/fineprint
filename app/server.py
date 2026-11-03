@@ -75,6 +75,7 @@ def ask(question: str, bank: str) -> dict:
     system, user = AGENT.review_prompt(ctx, draft)
     out = present(ctx, AGENT.parse(ctx, AGENT.generate(system, user)))
     out["chunks"] = state.chunk_payload(AGENT, [r["chunk_id"] for r in out["refs"]])
+    out["live"] = PROVIDER  # 화면이 실시간 답(베타)과 예시 답을 구분한다 (D-010)
     return out
 
 

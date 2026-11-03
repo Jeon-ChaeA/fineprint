@@ -96,6 +96,7 @@ textarea { width: 100%; min-height: 76px; resize: vertical; font: 15px/1.6 var(-
 .answer .text sup a { font: 600 11px var(--mono); color: var(--accent); text-decoration: none; padding: 0 1px; }
 .warn { font-size: 13px; color: var(--check); background: var(--check-soft); border-radius: 6px; padding: 8px 10px; }
 .basis { font-size: 12.5px; color: var(--muted); }
+.beta { font-size: 13px; line-height: 1.6; color: var(--hold); background: var(--hold-soft); border-radius: 6px; padding: 8px 10px; }
 .task { background: var(--accent-soft); border: 1px solid var(--rule); border-radius: 10px; padding: 14px 16px; display: grid; gap: 8px; }
 .task h2 { font: 700 16px/1.4 var(--display); margin: 0; }
 .task ol { margin: 0; padding-left: 1.3em; display: grid; gap: 4px; font-size: 14.5px; }
@@ -347,7 +348,8 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--rul
       '</span><div class="text">' + text + "</div>" +
       (a.warnings && a.warnings.length ? '<div class="warn">' + a.warnings.map(esc).join("<br>") + "</div>" : "") +
       (ids.length ? '<details class="src" open><summary>근거 원문 ' + ids.length + "개</summary>" + excerpts(ids, key) + "</details>" : "") +
-      (versions.length ? '<div class="basis">수집한 문서 기준 (시행일 ' + versions.map(esc).join(", ") + ")</div>" : "") + "</article>";
+      (versions.length ? '<div class="basis">수집한 문서 기준 (시행일 ' + versions.map(esc).join(", ") + ")</div>" : "") +
+      (a.live ? '<div class="beta">베타 답변이에요. 무료 AI 모델이 써서 답이 짧고, 조건이나 예외가 빠질 수 있어요. 결정하기 전에 위 근거 원문을 꼭 펼쳐 보세요.</div>' : "") + "</article>";
   }
 
   function setTab(which) {

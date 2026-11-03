@@ -1,0 +1,26 @@
+# Render 배포 설정 (D-010). 대시보드에서 New → Blueprint로 이 레포를 고르면 이 파일대로 만든다.
+# 비밀값 두 개(GEMINI_API_KEY, FINEPRINT_DATA_TOKEN)는 sync: false라 대시보드에서 직접 넣는다. 레포에는 넣지 않는다.
+services:
+  - type: web
+    name: fineprint
+    runtime: python
+    plan: free
+    region: singapore
+    buildCommand: python scripts/get_data.py   # 비공개 레포 fineprint-data에서 약관 데이터를 받는다
+    startCommand: python app/server.py
+    healthCheckPath: /healthz
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: FINEPRINT_LLM
+        value: gemini
+      - key: FINEPRINT_MODEL
+        value: gemini-3.5-flash-lite
+      - key: FINEPRINT_DAILY_LIMIT
+        value: "100"
+      - key: FINEPRINT_IP_LIMIT
+        value: "5"
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: FINEPRINT_DATA_TOKEN
+        sync: false

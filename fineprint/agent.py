@@ -23,7 +23,7 @@ from datetime import date
 import re
 from dataclasses import dataclass, field
 
-from . import crossref
+from . import crossref, guard
 from .corpus import Chunk, load
 from .retrieve import Index, detect_banks
 
@@ -253,11 +253,15 @@ class Agent:
             else:
                 invalid.append(i)
         status = data.get("status", "answered")
-        warned = {w.chunk_id for w in ctx.warnings}
+        # 평가 채점처럼 근거 목록만으로 만든 Context에는 은행·문서 목록·경고가 없을 수 있어 여기서 채운다
+        banks = ctx.banks or detect_banks(ctx.question) or sorted({c.bank for c in ctx.chunks})
+        inventory = ctx.inventory or {b: self.inventory.get(b, []) for b in banks}
+        warnings = ctx.warnings or [w for c in ctx.chunks for w in crossref.check(c, self.basic.get(c.bank, {}))]
         used = {ctx.chunks[int(i[1:]) - 1].id for i in ids if i not in invalid}
-        if warned & used and "확인 필요" not in text:
-            status = "flag_missing"   # 경고가 붙은 근거를 쓰고도 "확인 필요"를 밝히지 않음
-        return Answer(status, text, cites, labels, invalid, [w.text() for w in ctx.warnings], raw, cids)
+        used_warn = [w.text() for w in warnings if w.chunk_id in used]
+        # 안전장치(D-010): 모델이 놓친 '판단할 수 없음'·'확인 필요'를 코드가 붙인다
+        status, text, _ = guard.apply(ctx.question, banks, inventory, status, text, used_warn)
+        return Answer(status, text, cites, labels, invalid, [w.text() for w in warnings], raw, cids)
 
     def generate(self, system: str, user: str, model: str | None = None) -> str:
         """LLM으로 답을 만든다. 어느 쪽을 쓸지는 provider()가 정한다."""
@@ -287,7 +291,7 @@ class Agent:
 
 # --- LLM 공급자 -------------------------------------------------------------
 # 평가(1.0~1.6)는 Claude로 했다. 공개 데모의 실시간 답변은 무료인 Gemini API로 돌린다(D-010).
-GEMINI_DEFAULT = "gemini-flash-latest"
+GEMINI_DEFAULT = "gemini-3.5-flash-lite"  # 2026-11-02 점검: 1.2초, 생각 0. flash-latest는 98초
 GEMINI_URL = os.environ.get("FINEPRINT_GEMINI_URL",  # 시험용으로 바꿀 수 있다
                             "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent")
 
@@ -304,30 +308,60 @@ def provider() -> str | None:
     return None
 
 
-def gemini_generate(system: str, user: str, model: str, retries: int = 2) -> str:
+# 가벼운 모델은 긴 프롬프트의 앞쪽 지시를 놓치기 쉬워, 끝에 한 번 더 짧게 적는다 (Gemini 비교에서 놓친 것들)
+GEMINI_REMINDER = """
+
+[답을 쓰기 전에 마지막으로 확인]
+1. 질문이 은행이 받아들일지·승인할지, 내 금리·한도·점수가 얼마일지, 내 상황이 해당하는지를 묻는다면 status는 cannot_judge이고, 답 첫 문장에서 문서만으로는 판단할 수 없다고 말한다. 그다음 문서가 정한 조건·절차를 적는다.
+2. 질문이 지목한 문서가 [수집한 문서]에 없거나, 근거 경고가 있으면 '확인 필요'를 쓴다.
+3. 법·약관의 요건 문구(예: '채권보전에 현저한 위험', '도달일부터 10일 이상', '객관적으로 적정한 조치 없이')는 줄이지 말고 그대로 옮긴다.
+4. 짧게 쓰려고 질문이 직접 묻는 요소(기간, 금액, 대상, 예외)를 빼지 않는다.
+5. 형식은 지시대로 JSON 하나만 낸다."""
+
+
+def gemini_generate(system: str, user: str, model: str, retries: int = 3) -> str:
     """Gemini REST API를 표준 라이브러리로 부른다. 429·5xx는 잠깐 기다렸다 다시 한다."""
     import time
     import urllib.error
     import urllib.request
 
-    body = json.dumps({
-        "system_instruction": {"parts": [{"text": system}]},
-        "contents": [{"role": "user", "parts": [{"text": user}]}],
-        "generationConfig": {"temperature": 0.2, "maxOutputTokens": 8192},
-    }).encode("utf-8")
-    req = urllib.request.Request(GEMINI_URL.format(model=model), data=body, method="POST", headers={
-        "Content-Type": "application/json", "x-goog-api-key": os.environ["GEMINI_API_KEY"]})
+    cfg = {"temperature": 0.2, "maxOutputTokens": 8192}
+    level = os.environ.get("FINEPRINT_THINKING", "low")  # 생각을 짧게 (긴 프롬프트에서 시간 초과를 막는다). none이면 보내지 않는다
+    if level != "none":
+        cfg["thinkingConfig"] = {"thinkingLevel": level}
+
+    def request(cfg: dict):
+        body = json.dumps({
+            "system_instruction": {"parts": [{"text": system}]},
+            "contents": [{"role": "user", "parts": [{"text": user + GEMINI_REMINDER}]}],
+            "generationConfig": cfg,
+        }).encode("utf-8")
+        return urllib.request.Request(GEMINI_URL.format(model=model), data=body, method="POST", headers={
+            "Content-Type": "application/json", "x-goog-api-key": os.environ["GEMINI_API_KEY"]})
+
+    req = request(cfg)
+    timeout = float(os.environ.get("FINEPRINT_TIMEOUT", 180))
     for attempt in range(retries + 1):
         try:
-            with urllib.request.urlopen(req, timeout=90) as r:
+            with urllib.request.urlopen(req, timeout=timeout) as r:
                 data = json.loads(r.read().decode("utf-8"))
             break
         except urllib.error.HTTPError as e:
-            if attempt < retries and (e.code == 429 or e.code >= 500):
-                time.sleep(5 * (attempt + 1))
-                continue
             detail = e.read().decode("utf-8", "replace")[:300]
+            if e.code == 400 and "thinking" in detail.lower() and "thinkingConfig" in cfg:
+                cfg.pop("thinkingConfig")  # 이 모델은 생각 설정을 받지 않는다
+                req = request(cfg)
+                continue
+            if attempt < retries and (e.code == 429 or e.code >= 500):
+                time.sleep(10 * (attempt + 1))
+                continue
             raise RuntimeError(f"Gemini {e.code}: {detail}") from None
+        except (TimeoutError, urllib.error.URLError, ConnectionError) as e:  # 응답이 늦거나 연결이 끊김
+            if attempt < retries:
+                print(f"  Gemini 응답 지연({type(e).__name__}), 다시 시도해요...", flush=True)
+                time.sleep(10 * (attempt + 1))
+                continue
+            raise RuntimeError(f"Gemini 응답이 {timeout:.0f}초 안에 오지 않았어요") from None
     cand = (data.get("candidates") or [{}])[0]
     parts = (cand.get("content") or {}).get("parts") or []
     text = "".join(p.get("text", "") for p in parts if not p.get("thought"))

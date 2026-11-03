@@ -167,15 +167,23 @@ def cmd_generate(args):
     if args.resume and out.exists():  # 무료 API 한도에 걸려 멈췄을 때 이어서 한다
         done = {json.loads(l)["id"] for l in open(out, encoding="utf-8") if l.strip()}
     with open(out, "a" if args.resume else "w", encoding="utf-8") as f:
+        skipped = []
         for p in prompts:
             if p["id"] in done:
                 continue
-            raw = agent.generate(p["system"], p["user"], args.model)
+            try:
+                raw = agent.generate(p["system"], p["user"], args.model)
+            except RuntimeError as e:  # 한 문항이 계속 실패해도 나머지는 만든다. --resume으로 다시 돌리면 이 문항만 다시 한다
+                print(p["id"], "건너뜀:", str(e)[:120], flush=True)
+                skipped.append(p["id"])
+                continue
             f.write(json.dumps({"id": p["id"], "raw": raw}, ensure_ascii=False) + "\n")
             f.flush()
             print(p["id"], "done", flush=True)
             if args.sleep:
                 time.sleep(args.sleep)
+    if skipped:
+        sys.exit(f"건너뛴 문항 {len(skipped)}개: {', '.join(skipped)}. 같은 명령을 다시 실행하면 이 문항만 다시 만들어요.")
 
 
 def cmd_score(args):

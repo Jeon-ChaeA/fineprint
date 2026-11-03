@@ -1,6 +1,6 @@
 """화면에 줄 상태를 만든다. 서버(server.py)와 정적 데모(export_static.py)가 같이 쓴다.
 
-- 은행·수집 문서 목록, 불리할 수 있는 조건 요약, 예시 질문과 답
+- 은행·수집 문서 목록, 불리할 수 있는 조건 요약, 예시 질문과 답, 용어 풀이(근거 조각 포함)
 - 근거 조각의 원문은 로컬 data/processed에서 읽는다(레포에는 없다). 없으면 원문 없이 표기만 보여 준다.
 """
 from __future__ import annotations
@@ -40,6 +40,7 @@ def chunk_payload(agent: Agent | None, ids: list[str]) -> dict:
 def build(agent: Agent | None, live: bool) -> dict:
     summaries = json.loads((DATA / "summaries.json").read_text(encoding="utf-8"))
     samples = json.loads((DATA / "samples.json").read_text(encoding="utf-8"))
+    glossary = json.loads((DATA / "glossary.json").read_text(encoding="utf-8"))
     banks = []
     for b in BANKS:
         docs = []
@@ -51,6 +52,8 @@ def build(agent: Agent | None, live: bool) -> dict:
         banks.append({"name": b, "docs": docs})
     ids = [i for s in summaries for it in s["items"] for i in it["chunk_ids"]]
     ids += [r["chunk_id"] for s in samples for r in s["refs"]]
+    ids += [i for t in glossary for i in t["sources"].values()]
     return {"mode": "live" if live else "demo", "today": date.today().isoformat(), "banks": banks,
             "summaries": {s["bank"]: s["items"] for s in summaries}, "samples": samples,
+            "glossary": glossary,
             "chunks": chunk_payload(agent, list(dict.fromkeys(ids)))}
