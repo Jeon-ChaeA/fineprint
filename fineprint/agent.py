@@ -88,6 +88,7 @@ class Context:
     chunks: list[Chunk]
     warnings: list[crossref.Warning] = field(default_factory=list)
     inventory: dict[str, list[str]] = field(default_factory=dict)  # 은행 → 수집한 문서 이름
+    flags: dict = field(default_factory=dict)  # AI 분류기 결과 (guard.classify): {predict, missing_doc}
 
     def render(self) -> str:
         lines = [f"[질문] {self.question}"]
@@ -260,13 +261,14 @@ class Agent:
         used = {ctx.chunks[int(i[1:]) - 1].id for i in ids if i not in invalid}
         used_warn = [w.text() for w in warnings if w.chunk_id in used]
         # 안전장치(D-010): 모델이 놓친 '판단할 수 없음'·'확인 필요'를 코드가 붙인다
-        status, text, _ = guard.apply(ctx.question, banks, inventory, status, text, used_warn)
+        status, text, _ = guard.apply(ctx.question, banks, inventory, status, text, used_warn, ctx.flags)
         return Answer(status, text, cites, labels, invalid, [w.text() for w in warnings], raw, cids)
 
-    def generate(self, system: str, user: str, model: str | None = None) -> str:
+    def generate(self, system: str, user: str, model: str | None = None, reminder: bool = True) -> str:
         """LLM으로 답을 만든다. 어느 쪽을 쓸지는 provider()가 정한다."""
         if provider() == "gemini":
-            return gemini_generate(system, user, model or os.environ.get("FINEPRINT_MODEL", GEMINI_DEFAULT))
+            return gemini_generate(system, user, model or os.environ.get("FINEPRINT_MODEL", GEMINI_DEFAULT),
+                                   reminder=reminder)
         import anthropic  # 선택 의존성
 
         client = anthropic.Anthropic()
@@ -278,9 +280,19 @@ class Agent:
         )
         return msg.content[0].text
 
+    def classify(self, question: str, banks: list[str] | None = None, model: str | None = None) -> dict:
+        """안전장치용 AI 분류기: 결과 예측 질문인지, 없는 문서를 지목했는지. 실패하면 빈 dict(정규식만 쓴다)."""
+        inv = {b: self.inventory[b] for b in (banks or sorted(self.inventory))}
+        system, user = guard.classify_prompt(question, inv)
+        try:
+            return guard.parse_classify(self.generate(system, user, model, reminder=False))
+        except Exception:  # noqa: BLE001
+            return {}
+
     def ask(self, question: str, banks: list[str] | None = None, model: str | None = None,
             review: bool = True) -> Answer:
         ctx = self.context(question, banks)
+        ctx.flags = self.classify(question, ctx.banks, model)
         system, user = self.prompt(ctx)
         draft = self.generate(system, user, model)
         if not review:
@@ -319,7 +331,7 @@ GEMINI_REMINDER = """
 5. 형식은 지시대로 JSON 하나만 낸다."""
 
 
-def gemini_generate(system: str, user: str, model: str, retries: int = 3) -> str:
+def gemini_generate(system: str, user: str, model: str, retries: int = 3, reminder: bool = True) -> str:
     """Gemini REST API를 표준 라이브러리로 부른다. 429·5xx는 잠깐 기다렸다 다시 한다."""
     import time
     import urllib.error
@@ -333,7 +345,7 @@ def gemini_generate(system: str, user: str, model: str, retries: int = 3) -> str
     def request(cfg: dict):
         body = json.dumps({
             "system_instruction": {"parts": [{"text": system}]},
-            "contents": [{"role": "user", "parts": [{"text": user + GEMINI_REMINDER}]}],
+            "contents": [{"role": "user", "parts": [{"text": user + (GEMINI_REMINDER if reminder else "")}]}],
             "generationConfig": cfg,
         }).encode("utf-8")
         return urllib.request.Request(GEMINI_URL.format(model=model), data=body, method="POST", headers={

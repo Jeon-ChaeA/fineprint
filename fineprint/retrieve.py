@@ -64,8 +64,19 @@ def tokens(text: str) -> list[str]:
     return out
 
 
+# '하나'는 "내야 하나요?", "하나만"처럼 은행이 아닌 말에 자주 들어 있어, 은행을 가리킬 때만 잡는다 (2026-11-03)
+_HANA = re.compile(r"하나\s*(?:은행|뱅크|에서|에서는|에\s|에도|은\s|는\s|의\s|랑|와\s|\s*(?:신용)?대출|\s*마이너스)")
+
+
 def detect_banks(question: str) -> list[str]:
-    found = [b for b, al in BANK_ALIASES.items() if b in question or any(a in question for a in al)]
+    found = []
+    for b, al in BANK_ALIASES.items():
+        if b == "하나은행":
+            hit = _HANA.search(question) is not None
+        else:
+            hit = b in question or any(a in question for a in al)
+        if hit:
+            found.append(b)
     return found
 
 

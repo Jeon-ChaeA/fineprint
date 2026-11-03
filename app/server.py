@@ -70,6 +70,7 @@ def ask(question: str, bank: str) -> dict:
     named = detect_banks(question)
     banks = named if named else [bank]
     ctx = AGENT.context(question, banks)
+    ctx.flags = AGENT.classify(question, ctx.banks)  # 안전장치용 AI 분류기 (eval/results-guard.md)
     system, user = AGENT.prompt(ctx)
     draft = AGENT.generate(system, user)
     system, user = AGENT.review_prompt(ctx, draft)

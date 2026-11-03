@@ -23,3 +23,6 @@ app/feedback.local.jsonl
 
 # Gemini 비교 실행 (D-010): 답 원문이 들어 있어 통째로 로컬에만 둔다. 결과는 eval/results-gemini.md에 정리한다.
 runs/gemini/
+
+# 안전장치 분류기 실행 결과
+runs/guard/

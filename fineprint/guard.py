@@ -11,6 +11,7 @@ Gemini 비교(eval/results-gemini.md)에서 가벼운 모델은 판단할 수 �
 """
 from __future__ import annotations
 
+import json
 import re
 
 CANNOT = re.compile(r"판단할 수 없|판단하기 어렵|알 수 없|답할 수 없|단정할 수 없")
@@ -25,6 +26,9 @@ PREDICT = [
 ]
 PREDICT_LEAD = ("결론부터 말하면, 이 질문의 결과(은행의 승인·수용 여부나 개인별 금리·한도·점수, 내 상황이 해당하는지)는 "
                 "은행 심사와 개인 조건에 달려 있어 수집한 문서만으로는 판단할 수 없어요. 아래는 문서가 정한 조건과 절차예요.\n\n")
+
+PREDICT_LEAD_SOFT = ("결과가 은행 판단이나 개인 사정에 따라 달라질 수 있는 부분은 수집한 문서만으로는 단정할 수 없어요. "
+                     "문서로 확인되는 조건은 아래와 같아요.\n\n")
 
 # 2. 질문이 지목한 문서
 DOC = re.compile(r"([가-힣A-Za-z0-9Ⅰ-Ⅹ]+)?\s*(상품설명서|추가약정서|약정서|보증약관|기본약관)")
@@ -44,6 +48,8 @@ def missing_docs(question: str, banks: list[str], inventory: dict[str, list[str]
     out = []
     for m in DOC.finditer(question):
         qual, kind = (m.group(1) or "").strip(), m.group(2)
+        if re.search(r"(가|이|은|는|을|를|나|와|과|도|만)$", qual):
+            qual = ""  # '사유가 약정서나'처럼 조사로 끝나면 문서 이름이 아니다
         qual = re.sub(r"(의|에|용)$", "", qual) if qual not in GENERIC else qual
         for bank in banks or list(inventory):
             titles = _titles(inventory, bank)
@@ -63,14 +69,58 @@ def missing_docs(question: str, banks: list[str], inventory: dict[str, list[str]
     return out
 
 
+# --- AI 분류기 (2026-11-03) -------------------------------------------------
+# 처음 보는 45문항에서 정규식은 판단 불가 15개 중 4개만 잡았다(eval/results-guard.md). 말을 바꾸면 놓치므로,
+# 답을 쓰기 전에 모델에게 질문 종류만 따로 묻는다. 정규식과 분류기 중 하나라도 걸리면 표시한다.
+# 지시문 v1은 평가 문항을 보지 않고 정의만으로 썼다. v2(2026-11-03)는 평가 72문항의 오탐 7개(사정을 길게 말한 규칙 질문)를 보고
+# '사정이 길어도 규칙으로 정해지면 false'를 더했다. 예시는 평가 문항과 다른 내용으로 지었다. 그래서 v2는 새 질문셋(guard-holdout-v2)으로 다시 확인한다.
+CLASSIFY_VERSION = "v2"
+CLASSIFY_SYSTEM = """너는 대출 약관 질문을 분류한다. 질문에 답하지 말고, 질문의 종류만 JSON으로 낸다.
+
+predict: 질문의 답이 문서에 적힌 규칙만으로는 정해지지 않고, 은행의 재량·심사 판단이나 질문자의 비공개 정보(신용점수, 소득, 심사 기록 등)가 있어야만 정해지는가?
+- true: 내 신청이 승인·수용·거절될지, 은행이 재량으로 나에게 어떤 조치를 실제로 할지, 내 금리·한도·점수·감면액이 얼마로 나올지, 내 사정이 '현저한', '상당한' 같은 판단이 필요한 사유에 해당하는지.
+- false: 질문자가 자기 사정을 길게 설명하더라도, 그 사정에 문서의 규칙(기한, 처리 순서, 자동 효과, 통지 의무, 계산식, 조건)을 적용하면 답이 정해지는 경우. "이 경우 어떻게 되나요", "제가 해야 하나요", "그대로 써도 되나요", "다 갚아야 하나요"는 대개 규칙을 묻는 것이다. 절차·기간·서류·계산식·정의를 묻는 것도 false.
+- '승인', '거절', '얼마', '점수' 같은 말이 있어도 규칙을 묻는 것이면 false. 여러 물음 중 하나라도 true에 해당하면 true.
+
+missing_doc: 질문이 특정 문서(약관, 약정서, 설명서, 내규, 고시표, 보증서, 특정 상품 전용 문서 등)를 지목하거나 그 문서 기준으로 답해 달라고 하는데, 그 문서가 [수집한 문서] 목록에 없으면 그 문서 이름을 짧게 적는다. 목록에 있거나 문서를 지목하지 않았으면 null.
+
+예) "이 대출 갚을 때 원금부터 빠지나요 이자부터 빠지나요?" → {"predict": false, "missing_doc": null}
+예) "주말에 이사하느라 이자를 이틀 늦게 냈어요. 그동안 연체이자가 붙나요?" → {"predict": false, "missing_doc": null}
+예) "제 사업이 어려워졌는데 은행이 만기를 늘려 줄까요?" → {"predict": true, "missing_doc": null}
+예) "주택담보대출 전용 약관에서는 연체 기준이 며칠이에요?" (목록에 없음) → {"predict": false, "missing_doc": "주택담보대출 전용 약관"}
+
+출력은 {"predict": true 또는 false, "missing_doc": "문서 이름" 또는 null} 하나만."""
+
+
+def classify_prompt(question: str, inventory: dict[str, list[str]]) -> tuple[str, str]:
+    docs = "\n".join(f"- {b}: {', '.join(ds)}" for b, ds in inventory.items())
+    return CLASSIFY_SYSTEM, f"[수집한 문서]\n{docs}\n\n[질문]\n{question}"
+
+
+def parse_classify(raw: str) -> dict:
+    m = re.search(r"\{.*\}", raw or "", re.S)
+    try:
+        d = json.loads(m.group(0)) if m else {}
+    except json.JSONDecodeError:
+        return {}
+    md = d.get("missing_doc")
+    return {"predict": d.get("predict") is True, "missing_doc": md if isinstance(md, str) and md.strip() else None}
+
+
 def apply(question: str, banks: list[str], inventory: dict[str, list[str]], status: str, text: str,
-          warnings_used: list[str]) -> tuple[str, str, list[str]]:
-    """(status, text, 붙인 안전장치 이름들)을 돌려준다."""
+          warnings_used: list[str], flags: dict | None = None) -> tuple[str, str, list[str]]:
+    """(status, text, 붙인 안전장치 이름들)을 돌려준다. flags는 AI 분류기 결과({predict, missing_doc})."""
+    flags = flags or {}
     fired = []
-    if status == "answered" and any(p.search(question) for p in PREDICT) and not CANNOT.search(text):
-        status, text = "cannot_judge", PREDICT_LEAD + text
-        fired.append("predict")
+    by_rule = any(p.search(question) for p in PREDICT)
+    by_ai = flags.get("predict") is True
+    if status == "answered" and (by_rule or by_ai) and not CANNOT.search(text):
+        # 분류기만 걸린 경우는 규칙 질문을 잘못 잡았을 수 있어(새 문항 오탐 약 4~13%) 말을 조금 누그러뜨린다
+        status, text = "cannot_judge", (PREDICT_LEAD if by_rule else PREDICT_LEAD_SOFT) + text
+        fired.append("predict" if by_rule else "predict_ai")
     missing = missing_docs(question, banks, inventory)
+    if not missing and flags.get("missing_doc"):
+        missing = [flags["missing_doc"]]
     if missing and not CHECK.search(text):
         text += ("\n\n확인 필요: 질문하신 " + ", ".join(f"'{m}'" for m in missing) +
                  "은(는) 수집한 문서에 없어요. 위 내용은 수집한 다른 문서 기준이라, 그 문서의 실제 내용은 은행에 확인해 주세요.")
