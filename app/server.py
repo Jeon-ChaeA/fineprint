@@ -92,12 +92,13 @@ class Handler(BaseHTTPRequestHandler):
         self._send(code, json.dumps(obj, ensure_ascii=False).encode("utf-8"), "application/json; charset=utf-8")
 
     def do_GET(self):
-        if self.path in ("/", "/index.html"):
+        path = self.path.split("?", 1)[0]  # ?bank=카카오뱅크 같은 쿼리는 화면(JS)이 읽는다
+        if path in ("/", "/index.html"):
             html = PAGE + (HERE / "ui.html").read_text(encoding="utf-8") + "</body></html>"
             self._send(200, html.encode("utf-8"), "text/html; charset=utf-8")
-        elif self.path == "/api/state":
+        elif path == "/api/state":
             self._json(state.build(AGENT, LIVE) | {"provider": PROVIDER if LIVE else None})
-        elif self.path == "/healthz":
+        elif path == "/healthz":
             self._send(200, b"ok", "text/plain")
         else:
             self._send(404, b"not found", "text/plain")
