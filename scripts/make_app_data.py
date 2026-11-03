@@ -23,7 +23,7 @@ from fineprint.present import answer as present  # noqa: E402
 OUT = ROOT / "app" / "data"
 BANKS = ["토스뱅크", "카카오뱅크", "하나은행"]
 # 은행마다 상황이 다른 질문 4개 + 은행 비교(권유하지 않는 예). 상태(답변·판단할 수 없음·확인 필요)가 고루 섞이게 골랐다
-SAMPLES = ["Q09", "H07", "K01", "Q29", "J04", "L06", "Q19", "K09", "L09", "H03", "J09", "Q31", "Q32"]
+SAMPLES = ["Q09", "H07", "K01", "Q29", "J04", "L06", "Q19", "K09", "L09", "H03", "J09", "L08", "Q31", "Q32"]  # L08: 연대보증인 질문 (2026-11-03 가상 사용자 P5)
 RUN = {"Q": "v1.6", "H": "v1.6-holdout", "J": "v1.6-holdout2", "K": "v1.6-holdout3", "L": "v1.6-holdout4"}
 EVAL = {"Q": "credit-loan-v1", "H": "credit-loan-holdout-v1", "J": "credit-loan-holdout-v2",
         "K": "credit-loan-holdout-v3", "L": "credit-loan-holdout-v4"}
@@ -43,6 +43,13 @@ def main():
         sums = [summary.summarize(agent, b) for b in BANKS]
     for s in sums:
         s.pop("invalid", None)
+    # 사람이 원문과 대조해 고친 줄("reviewed")은 다시 만들어도 덮어쓰지 않는다 (2026-11-03, 카카오 해약금 줄 오류)
+    old = OUT / "summaries.json"
+    if old.exists():
+        kept = {(b["bank"], it["topic"]): it for b in json.loads(old.read_text(encoding="utf-8"))
+                for it in b["items"] if it.get("reviewed")}
+        for b in sums:
+            b["items"] = [kept.get((b["bank"], it["topic"]), it) for it in b["items"]]
     (OUT / "summaries.json").write_text(json.dumps(sums, ensure_ascii=False, indent=1), encoding="utf-8")
 
     by = {c.id: c for c in agent.chunks}

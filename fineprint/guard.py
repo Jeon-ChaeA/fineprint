@@ -27,6 +27,8 @@ PREDICT = [
 PREDICT_LEAD = ("결론부터 말하면, 이 질문의 결과(은행의 승인·수용 여부나 개인별 금리·한도·점수, 내 상황이 해당하는지)는 "
                 "은행 심사와 개인 조건에 달려 있어 수집한 문서만으로는 판단할 수 없어요. 아래는 문서가 정한 조건과 절차예요.\n\n")
 
+PREDICT_TAIL_SOFT = ("참고: 결과가 은행 판단이나 개인 사정에 따라 달라질 수 있는 부분은 수집한 문서만으로는 단정할 수 없어요. "
+                     "위 내용은 문서가 정한 조건이에요.")
 PREDICT_LEAD_SOFT = ("결과가 은행 판단이나 개인 사정에 따라 달라질 수 있는 부분은 수집한 문서만으로는 단정할 수 없어요. "
                      "문서로 확인되는 조건은 아래와 같아요.\n\n")
 
@@ -107,17 +109,37 @@ def parse_classify(raw: str) -> dict:
     return {"predict": d.get("predict") is True, "missing_doc": md if isinstance(md, str) and md.strip() else None}
 
 
+MORTGAGE_Q = re.compile(r"주택|담보|주담대|아파트|전세")
+
+
+def mortgage_mixed(question: str, text: str) -> bool:
+    """신용대출 질문의 답이 주택담보대출 조건을 구분 없이 앞세웠는가.
+    "1개월(주택담보대출은 2개월)"처럼 괄호로 구분했거나 신용대출 기준(1개월·2회)을 함께 쓴 답은 괜찮다."""
+    if "주택담보" not in text or MORTGAGE_Q.search(question):
+        return False
+    bare = re.sub(r"\([^()]*주택담보[^()]*\)", "", text)
+    if "주택담보" not in bare:
+        return False
+    return not re.search(r"1\s*개월|2\s*회", bare)
+
+
 def apply(question: str, banks: list[str], inventory: dict[str, list[str]], status: str, text: str,
-          warnings_used: list[str], flags: dict | None = None) -> tuple[str, str, list[str]]:
-    """(status, text, 붙인 안전장치 이름들)을 돌려준다. flags는 AI 분류기 결과({predict, missing_doc})."""
+          warnings_used: list[str], flags: dict | None = None, n_refs: int | None = None) -> tuple[str, str, list[str]]:
+    """(status, text, 붙인 안전장치 이름들)을 돌려준다. flags는 AI 분류기 결과({predict, missing_doc}),
+    n_refs는 답이 실제로 댄 근거 개수(None이면 검사하지 않는다)."""
     flags = flags or {}
     fired = []
     by_rule = any(p.search(question) for p in PREDICT)
     by_ai = flags.get("predict") is True
     if status == "answered" and (by_rule or by_ai) and not CANNOT.search(text):
-        # 분류기만 걸린 경우는 규칙 질문을 잘못 잡았을 수 있어(새 문항 오탐 약 4~13%) 말을 조금 누그러뜨린다
-        status, text = "cannot_judge", (PREDICT_LEAD if by_rule else PREDICT_LEAD_SOFT) + text
-        fired.append("predict" if by_rule else "predict_ai")
+        if by_rule:
+            status, text = "cannot_judge", PREDICT_LEAD + text
+            fired.append("predict")
+        else:
+            # 분류기만 걸린 경우는 규칙 질문을 잘못 잡았을 수 있어(새 문항 오탐 약 4~13%), 모델이 쓴 결론을 앞에 두고
+            # 뒤에 한 줄을 붙인다 (2026-11-03 가상 사용자 테스트: 앞에 붙이면 결론이 밀려 "또 모른다는 거야" 반응)
+            status, text = "check_needed", text + "\n\n" + PREDICT_TAIL_SOFT
+            fired.append("predict_ai")
     missing = missing_docs(question, banks, inventory)
     if not missing and flags.get("missing_doc"):
         missing = [flags["missing_doc"]]
@@ -132,4 +154,16 @@ def apply(question: str, banks: list[str], inventory: dict[str, list[str]], stat
         if status in ("answered", "flag_missing"):
             status = "check_needed"
         fired.append("crossref")
+    # 4. 근거 없는 답 (2026-11-03 가상 사용자 테스트: 근거 0개로 "해약금 없음"이라고만 답함)
+    if n_refs == 0 and status in ("answered", "check_needed"):
+        text += "\n\n확인 필요: 이 답에는 근거 조항이 달리지 않았어요. 문서로 확인한 답이 아니니 은행에 확인해 주세요."
+        status = "check_needed"
+        fired.append("no_refs")
+    # 5. 신용대출 질문에 주택담보대출 조건이 섞인 답 (같은 테스트: 이자 '2개월' 기준을 앞세움)
+    if mortgage_mixed(question, text):
+        text += ("\n\n확인 필요: 위 답에 주택담보대출 조건이 섞여 있어요. 신용대출은 기준(기간·횟수)이 다를 수 있으니 "
+                 "근거 원문에서 신용대출에 해당하는 부분을 확인해 주세요.")
+        if status == "answered":
+            status = "check_needed"
+        fired.append("mortgage_mix")
     return status, text, fired

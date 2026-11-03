@@ -261,7 +261,7 @@ class Agent:
         used = {ctx.chunks[int(i[1:]) - 1].id for i in ids if i not in invalid}
         used_warn = [w.text() for w in warnings if w.chunk_id in used]
         # 안전장치(D-010): 모델이 놓친 '판단할 수 없음'·'확인 필요'를 코드가 붙인다
-        status, text, _ = guard.apply(ctx.question, banks, inventory, status, text, used_warn, ctx.flags)
+        status, text, _ = guard.apply(ctx.question, banks, inventory, status, text, used_warn, ctx.flags, len(cids))
         return Answer(status, text, cites, labels, invalid, [w.text() for w in warnings], raw, cids)
 
     def generate(self, system: str, user: str, model: str | None = None, reminder: bool = True) -> str:
@@ -327,8 +327,11 @@ GEMINI_REMINDER = """
 1. 질문이 은행이 받아들일지·승인할지, 내 금리·한도·점수가 얼마일지, 내 상황이 해당하는지를 묻는다면 status는 cannot_judge이고, 답 첫 문장에서 문서만으로는 판단할 수 없다고 말한다. 그다음 문서가 정한 조건·절차를 적는다.
 2. 질문이 지목한 문서가 [수집한 문서]에 없거나, 근거 경고가 있으면 '확인 필요'를 쓴다.
 3. 법·약관의 요건 문구(예: '채권보전에 현저한 위험', '도달일부터 10일 이상', '객관적으로 적정한 조치 없이')는 줄이지 말고 그대로 옮긴다.
-4. 짧게 쓰려고 질문이 직접 묻는 요소(기간, 금액, 대상, 예외)를 빼지 않는다.
-5. 형식은 지시대로 JSON 하나만 낸다."""
+4. 짧게 쓰려고 질문이 직접 묻는 요소(기간, 금액, 대상, 예외)를 빼지 않는다. 질문에 물음이 여러 개면 하나씩 모두 답한다.
+5. 답의 첫 문장은 질문에 대한 결론 한 줄이다(예: "네, …", "아니요, …", "문서만으로는 판단할 수 없어요. …"). 근거와 조건은 그다음에 쓴다.
+6. 질문이 신용대출·마이너스통장이면 주택담보대출 조건(2개월, 3회 등)을 결론으로 쓰지 않는다. 함께 적을 때는 "주택담보대출은 다르다"고 구분한다.
+7. 모든 사실 문장에 근거 번호(C번호)를 단다. 근거가 없는 사실은 쓰지 않는다.
+8. 형식은 지시대로 JSON 하나만 낸다."""
 
 
 def gemini_generate(system: str, user: str, model: str, retries: int = 3, reminder: bool = True) -> str:

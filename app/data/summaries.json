@@ -78,13 +78,15 @@
    },
    {
     "topic": "중도상환해약금",
-    "line": "약정 기일 전에 갚으면 해약금 부과(잔여일수÷대출기간 비례). 잔여기간 3개월 미만이면 면제",
+    "line": "신용대출은 해약금 없음(상품설명서). 약정서엔 부과 조항(잔여 3개월 미만 면제)이 있어 확인 필요",
     "chunk_ids": [
+     "kakao_manual:p1#3",
      "kakao_contract:제5조①",
      "kakao_contract:제5조③",
      "kakao_manual:p2#0"
     ],
-    "unverified": []
+    "unverified": [],
+    "reviewed": "2026-11-03 사람 대조 수정 (research/usability-test-2-synthetic.md)"
    },
    {
     "topic": "연체이자",
@@ -139,12 +141,13 @@
    },
    {
     "topic": "중도상환해약금",
-    "line": "대출취급일로부터 3년까지 적용. 해약금률은 금리 유형·담보에 따라 다름",
+    "line": "대출취급일부터 3년까지 적용. 가계 신용대출 해약금률 0.7%(부동산담보는 1.2~1.4%)",
     "chunk_ids": [
      "hana_manual:p4#6",
      "hana_basic:제10조"
     ],
-    "unverified": []
+    "unverified": [],
+    "reviewed": "2026-11-03 사람 대조 수정 (research/usability-test-2-synthetic.md)"
    },
    {
     "topic": "연체이자",
