@@ -4,6 +4,7 @@
  * 설문 페이지에서 보낸 응답을 Google 스프레드시트에 저장한다.
  * - responses 시트: 1차 사용자 설문 (survey/index.html, 2026-10-08 마감)
  * - usability 시트: 프로토타입 사용성 테스트 설문 (survey/usability.html, form: "usability")
+ * - usability3 시트: 실제 사람 테스트, 이해도 퀴즈 (survey/usability3.html, form: "usability3")
  *
  * 설정 방법은 research/survey/README.md 참고.
  */
@@ -22,8 +23,20 @@ const USABILITY_FIELDS = [
   'understood_check', 'used_samples', 'tried_own_question', 'own_question', 'cannot_judge_feel',
   'summary_vs_ask', 'would_use', 'one_fix', 'ua_mobile'
 ];
-// 사용성 테스트는 5명에서 마감한다. 이후 응답은 저장하지 않고, 설문 페이지는 마감 안내를 보여 준다.
-const USABILITY_LIMIT = 5;
+// 실제 사람 테스트 (research/usability/test-3-plan.md)
+const U3_FIELDS = [
+  'loan_exp', 'group', 'pre_q1', 'pre_q2', 'pre_q3', 'pre_q4', 'pre_q5', 'pre_score',
+  'material_seconds', 'opened_link', 'post_q1', 'post_q2', 'post_q3', 'post_q4', 'post_q5', 'post_score',
+  'asked_own', 'own_question', 'answer_status', 'answer_help', 'next_step_help', 'trust_source',
+  'compare_pref', 'would_use', 'one_fix', 'ua_mobile'
+];
+
+// 폼별 시트와 마감 인원. 마감 뒤 응답은 저장하지 않고, 설문 페이지는 마감 안내를 보여 준다.
+const FORMS = {
+  responses: { fields: FIELDS, limit: 0 },
+  usability: { fields: USABILITY_FIELDS, limit: 5 },
+  usability3: { fields: U3_FIELDS, limit: 12 }
+};
 
 function doPost(e) {
   const lock = LockService.getScriptLock();
@@ -35,12 +48,11 @@ function doPost(e) {
     const ss = SpreadsheetApp.openById(SHEET_ID);
     const now = new Date();
 
-    const usability = data.form === 'usability';
-    const name = usability ? 'usability' : 'responses';
-    const fields = usability ? USABILITY_FIELDS : FIELDS;
-    const sh = sheet_(ss, name, ['received_at'].concat(fields));
-    if (usability && sh.getLastRow() - 1 >= USABILITY_LIMIT) return json_({ ok: false, closed: true });
-    sh.appendRow([now].concat(fields.map(function (k) { return clean_(data[k]); })));
+    const name = FORMS[data.form] ? data.form : 'responses';
+    const form = FORMS[name];
+    const sh = sheet_(ss, name, ['received_at'].concat(form.fields));
+    if (form.limit && sh.getLastRow() - 1 >= form.limit) return json_({ ok: false, closed: true });
+    sh.appendRow([now].concat(form.fields.map(function (k) { return clean_(data[k]); })));
 
     return ok_();
   } catch (err) {
@@ -52,11 +64,12 @@ function doPost(e) {
 }
 
 function doGet(e) {
-  // 설문 페이지가 열릴 때 마감 여부를 묻는다: ?status=usability
-  if (e && e.parameter && e.parameter.status === 'usability') {
-    const sh = SpreadsheetApp.openById(SHEET_ID).getSheetByName('usability');
+  // 설문 페이지가 열릴 때 마감 여부와 응답 수를 묻는다: ?status=usability3
+  const st = e && e.parameter && e.parameter.status;
+  if (st && FORMS[st] && FORMS[st].limit) {
+    const sh = SpreadsheetApp.openById(SHEET_ID).getSheetByName(st);
     const count = sh ? Math.max(0, sh.getLastRow() - 1) : 0;
-    return json_({ open: count < USABILITY_LIMIT, count: count, limit: USABILITY_LIMIT });
+    return json_({ open: count < FORMS[st].limit, count: count, limit: FORMS[st].limit });
   }
   return ContentService.createTextOutput('fineprint survey endpoint is running.');
 }
@@ -65,8 +78,9 @@ function doGet(e) {
 function setup() {
   const ss = SpreadsheetApp.openById(SHEET_ID);
   ss.setSpreadsheetTimeZone('Asia/Seoul');
-  sheet_(ss, 'responses', ['received_at'].concat(FIELDS));
-  sheet_(ss, 'usability', ['received_at'].concat(USABILITY_FIELDS));
+  Object.keys(FORMS).forEach(function (name) {
+    sheet_(ss, name, ['received_at'].concat(FORMS[name].fields));
+  });
 }
 
 function sheet_(ss, name, header) {

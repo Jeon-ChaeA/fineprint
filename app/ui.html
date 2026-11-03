@@ -386,6 +386,8 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--rul
     $("ask-note").textContent = S.mode === "live" ? "답을 만드는 데 20초쯤 걸려요. 질문은 10분에 5개까지 할 수 있어요." : "데모에서는 아래 예시 질문만 답할 수 있어요.";
     $("privacy-note").hidden = S.provider !== "gemini";
     try { bank = localStorage.getItem("fp-bank") || bank; } catch (e) {}
+    // 링크로 은행을 고정할 수 있다: ?bank=카카오뱅크 (사용성 테스트 3차)
+    try { var qb = new URLSearchParams(location.search).get("bank"); if (qb) bank = qb; } catch (e) {}
     if (!S.banks.some(function (b) { return b.name === bank; })) bank = S.banks[0].name;
     renderAll();
     try { if (localStorage.getItem("fp-tab") === "ask") setTab("ask"); } catch (e) {}
