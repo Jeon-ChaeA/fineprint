@@ -30,7 +30,10 @@ def answer(ctx: Context, ans: Answer) -> dict:
             order.append(n)
         return f"[{order.index(n) + 1}]"
 
-    text = re.sub(r"\[C(\d+)\]", renumber, ans.answer)
+    # "[C1, C6]"처럼 여러 번호를 한 괄호에 묶은 인용은 "[C1][C6]"로 펼친 뒤 다시 매긴다
+    text = re.sub(r"\[(C\d+(?:\s*[,·]\s*C\d+)+)\]",
+                  lambda m: "".join(f"[{c}]" for c in re.findall(r"C\d+", m.group(1))), ans.answer)
+    text = re.sub(r"\[C(\d+)\]", renumber, text)
     text = re.sub(r"\]\s*\[", "][", text).strip()
     return {"status": ans.status, "status_label": STATUS.get(ans.status, ans.status), "text": text,
             "refs": [ref(ctx.chunks[n - 1]) for n in order], "warnings": ans.warnings if ans.status == "check_needed" else []}
