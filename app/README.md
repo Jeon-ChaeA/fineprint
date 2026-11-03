@@ -26,7 +26,7 @@ $env:GEMINI_API_KEY="..."; python app/server.py      # 실시간 답변 (베타,
 
 - 표준 라이브러리만 쓴다. 실시간 답변은 Gemini API 키(`GEMINI_API_KEY`, 무료)로 돌린다. `ANTHROPIC_API_KEY`만 있으면 Claude로 돌린다(`anthropic` 패키지 필요). 문항당 LLM 2번: 초안 → 점검.
 - 실시간 답변에는 코드 안전장치([fineprint/guard.py](../fineprint/guard.py))가 걸리고, 화면에 베타 안내와 개인정보 안내가 붙는다. 하루 100개, 한 사람 10분에 5개로 제한한다(`FINEPRINT_DAILY_LIMIT`, `FINEPRINT_IP_LIMIT`).
-- 공개 배포는 [render.yaml](../render.yaml)대로 한다. 약관 데이터는 비공개 레포에서 `scripts/get_data.py`로 받는다.
+- 공개 배포는 [render.yaml](../render.yaml)대로 한다: https://fineprint-i8hy.onrender.com (무료 서버라 15분 쉬면 잠들고, 첫 접속은 1분쯤 걸린다). 약관 데이터는 비공개 레포에서 `scripts/get_data.py`로 받는다.
 - 조항 원문은 로컬 `data/processed`에서 읽는다. 이 폴더는 레포에 없으므로, 없으면 원문 없이 조항 표기만 보인다(`scripts/parse_terms.py`로 만든다).
 - 데모 모드에서는 요약과 예시 질문 13개의 답만 보인다. 예시 답은 1.6 평가에서 고른 것이다.
 - "이해되셨나요?" 응답은 `app/feedback.local.jsonl`에 쌓인다(레포에 올리지 않음). 질문 내용은 남기지 않는다.
