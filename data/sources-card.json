@@ -1,0 +1,84 @@
+{
+  "retrieved_at": "2026-11-04",
+  "product": "신용카드",
+  "note": "사이클 2(D-011). 원문 PDF는 data/raw/card/에 두고 레포에 올리지 않는다. 카드사 서버가 클라우드 작업 공간에서 막혀 전채아 PC의 브라우저로 받았다. 'bank' 필드는 코어 호환을 위해 카드사 이름을 담는다. 3층 하나카드 시행일은 준법심의일(출시 2026-07-01).",
+  "documents": [
+    {
+      "id": "hana_card_basic",
+      "bank": "하나카드",
+      "layer": 1,
+      "title": "신용카드 개인회원 표준약관",
+      "effective": "2026-05-12",
+      "file": "hana_card_basic.pdf",
+      "url": "https://www.hanacard.co.kr/ATTACH/WWW/pdf/provision/credit_card_260512.pdf",
+      "sha256": "a4965c4a8880a3d2923ddf753913bd1e3883d481fb656ddec970cdcb2d6c8783",
+      "bytes": 1377126
+    },
+    {
+      "id": "hana_card_addendum",
+      "bank": "하나카드",
+      "layer": 2,
+      "title": "신용카드 개인회원 부속약관",
+      "effective": "2023-07-21",
+      "file": "hana_card_addendum.pdf",
+      "url": "https://www.hanacard.co.kr/ATTACH/WWW/pdf/provision/creditcard_info_20230504.pdf",
+      "sha256": "da285884592ff49fafd2f8b424dc660cee4fef9a192aebb5b9d530de82433f02",
+      "bytes": 63886
+    },
+    {
+      "id": "hana_card_revolving",
+      "bank": "하나카드",
+      "layer": 2,
+      "title": "일부결제금액이월약정(리볼빙) 약정서",
+      "effective": "2024-02-01",
+      "file": "hana_card_revolving.pdf",
+      "url": "https://www.hanacard.co.kr/ATTACH/WWW/pdf/provision/revolving_agreement_240201.pdf",
+      "sha256": "51b7d142724c64eb628fa2d2dcefa5dae8c663266e67798c9d416b84ebc9f08e",
+      "bytes": 116487
+    },
+    {
+      "id": "hana_card_manual_moving",
+      "bank": "하나카드",
+      "layer": 3,
+      "title": "MOVING카드 상품설명서",
+      "effective": "2026-06-08",
+      "file": "hana_card_manual_moving.pdf",
+      "url": "https://m.hanacard.co.kr/leaflet/15/15725_20260608.pdf",
+      "sha256": "7a6f3a2a514649e1507ae6de77271917e0fd6f89423bb756be2f3d1bcbf10f63",
+      "bytes": 4160473
+    },
+    {
+      "id": "shinhan_card_basic",
+      "bank": "신한카드",
+      "layer": 1,
+      "title": "신용카드 개인회원 표준약관",
+      "effective": "2026-05-12",
+      "file": "shinhan_card_basic.pdf",
+      "url": "https://www.shinhancard.com/pconts/download/card_member_terms/20260402534846_02.pdf",
+      "sha256": "b61730305c3d6b2709b400e6e173fe3357996f76ef464659626492e220acb56a",
+      "bytes": 284761
+    },
+    {
+      "id": "shinhan_card_addendum",
+      "bank": "신한카드",
+      "layer": 2,
+      "title": "신용카드 개인회원 부속약관",
+      "effective": "2024-03-22",
+      "file": "shinhan_card_addendum.pdf",
+      "url": "https://www.shinhancard.com/pconts/download/card_member_terms/T20240123357326.pdf",
+      "sha256": "c8291217a7bfc48867d4b9a74ecd017c6e8a4b45174af4cbec7d6626eafe5b75",
+      "bytes": 74707
+    },
+    {
+      "id": "shinhan_card_manual_common",
+      "bank": "신한카드",
+      "layer": 3,
+      "title": "신용카드 설명서",
+      "effective": "2024-10-17",
+      "file": "shinhan_card_manual_common.pdf",
+      "url": "https://www.shinhancard.com/pconts/download/card_member_terms/T20241125393841.pdf",
+      "sha256": "8a989dc1b0fb75636268c4797ff6f7f54a86fd4c58ed3d0c10f34c165d0ef181",
+      "bytes": 1880281
+    }
+  ]
+}

@@ -18,7 +18,8 @@ from pathlib import Path
 import pdfplumber
 
 ROOT = Path(__file__).resolve().parent.parent
-ARTICLE_RE = re.compile(r"^제\s*(\d+)\s*조(?:\s*의\s*(\d+))?\s*(?:\(([^)]*)\)|\s+(.+))?\s*$")
+# 제목 안에 괄호가 또 있는 경우(카드 표준약관 "제14조(단기카드대출(현금서비스))")도 잡도록 바깥 괄호까지 읽는다
+ARTICLE_RE = re.compile(r"^제\s*(\d+)\s*조(?:\s*의\s*(\d+))?\s*(?:\(((?:[^()]|\([^()]*\))*)\)|\s+(.+))?\s*$")
 PARA_RE = re.compile(r"^([①-⑳])\s*")
 PAGE_NO_RE = re.compile(r"^\s*\d+\s*/\s*\d+\s*$")
 
@@ -136,10 +137,12 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--raw", default=str(ROOT / "data" / "raw"))
     ap.add_argument("--out", default=str(ROOT / "data" / "processed"))
+    ap.add_argument("--sources", default=str(ROOT / "data" / "sources.json"),
+                    help="문서 목록 (사이클 2 카드: data/sources-card.json)")
     args = ap.parse_args()
     raw, out = Path(args.raw), Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
-    sources = json.loads((ROOT / "data" / "sources.json").read_text(encoding="utf-8"))
+    sources = json.loads(Path(args.sources).read_text(encoding="utf-8"))
     summary = []
     for d in sources["documents"]:
         f = raw / d["file"]
@@ -148,7 +151,7 @@ def main():
             continue
         digest = hashlib.sha256(f.read_bytes()).hexdigest()
         if digest != d.get("sha256"):
-            print(f"[경고] {d['id']}: sha256이 sources.json과 다름. 약관이 바뀌었을 수 있음")
+            print(f"[경고] {d['id']}: sha256이 문서 목록과 다름. 약관이 바뀌었을 수 있음")
         pages = extract(f)
         full = "\n\n".join(f"[p.{n}]\n" + "\n".join(ls) for n, ls in pages)
         (out / f"{d['id']}.txt").write_text(full, encoding="utf-8")
