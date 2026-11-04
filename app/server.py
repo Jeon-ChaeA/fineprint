@@ -33,6 +33,7 @@ from fineprint.agent import provider  # noqa: E402
 from fineprint.retrieve import detect_banks  # noqa: E402
 
 AGENT = state.load_agent()
+CARD_AGENT = state.load_card_agent()  # 사이클 2 신용카드 (D-011)
 PROVIDER = provider()
 LIVE = PROVIDER is not None and AGENT is not None
 
@@ -67,20 +68,23 @@ PAGE = ("<!doctype html><html lang=\"ko\"><head><meta charset=\"utf-8\">"
 
 
 SUMMARIES = json.loads((HERE / "data" / "summaries.json").read_text(encoding="utf-8"))
+SUMMARIES += json.loads((HERE / "data" / "summaries-card.json").read_text(encoding="utf-8"))
 
 
 def ask(question: str, bank: str) -> dict:
-    named = detect_banks(question)
+    card = bank in state.CARD_BANKS and CARD_AGENT is not None
+    agent = CARD_AGENT if card else AGENT
+    named = detect_banks(question, "card" if card else "loan")
     banks = named if named else [bank]
-    ctx = AGENT.context(question, banks)
-    ctx.flags = AGENT.classify(question, ctx.banks)  # 안전장치용 AI 분류기 (eval/results-guard.md)
+    ctx = agent.context(question, banks)
+    ctx.flags = agent.classify(question, ctx.banks)  # 안전장치용 AI 분류기 (eval/results-guard.md)
     ctx.summary_flags = [(it["topic"], it["line"]) for s in SUMMARIES if s["bank"] in ctx.banks
                          for it in s["items"] if "확인 필요" in it["line"]]
-    system, user = AGENT.prompt(ctx)
-    draft = AGENT.generate(system, user)
-    system, user = AGENT.review_prompt(ctx, draft)
-    out = present(ctx, AGENT.parse(ctx, AGENT.generate(system, user)))
-    out["chunks"] = state.chunk_payload(AGENT, [r["chunk_id"] for r in out["refs"]])
+    system, user = agent.prompt(ctx)
+    draft = agent.generate(system, user)
+    system, user = agent.review_prompt(ctx, draft)
+    out = present(ctx, agent.parse(ctx, agent.generate(system, user)))
+    out["chunks"] = state.chunk_payload(agent, [r["chunk_id"] for r in out["refs"]])
     out["live"] = PROVIDER  # 화면이 실시간 답(베타)과 예시 답을 구분한다 (D-010)
     return out
 
@@ -102,7 +106,7 @@ class Handler(BaseHTTPRequestHandler):
             html = PAGE + (HERE / "ui.html").read_text(encoding="utf-8") + "</body></html>"
             self._send(200, html.encode("utf-8"), "text/html; charset=utf-8")
         elif path == "/api/state":
-            self._json(state.build(AGENT, LIVE) | {"provider": PROVIDER if LIVE else None})
+            self._json(state.build(AGENT, LIVE, CARD_AGENT) | {"provider": PROVIDER if LIVE else None})
         elif path == "/healthz":
             self._send(200, b"ok", "text/plain")
         else:
@@ -126,7 +130,7 @@ class Handler(BaseHTTPRequestHandler):
             why = allow(ip)
             if why:
                 return self._json({"error": why}, 429)
-            bank = data.get("bank") if data.get("bank") in state.BANKS else "토스뱅크"
+            bank = data.get("bank") if data.get("bank") in state.BANKS + state.CARD_BANKS else "토스뱅크"
             try:
                 self._json(ask(q, bank))
             except Exception as e:  # LLM 호출 실패 등. 자세한 내용은 서버 로그에만

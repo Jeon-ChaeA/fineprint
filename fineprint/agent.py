@@ -230,6 +230,8 @@ class Agent:
 
     # 2. 답 만들기 ---------------------------------------------------------
     def prompt(self, ctx: Context) -> tuple[str, str]:
+        if self.product == "card":  # 사이클 2: 같은 규칙, 읽는 문서만 카드 (D-011)
+            return SYSTEM.replace("한국 은행 신용대출 약관을", "한국 카드사의 신용카드 약관·상품설명서를"), ctx.render()
         return SYSTEM, ctx.render()
 
     def review_prompt(self, ctx: Context, draft: str) -> tuple[str, str]:
@@ -288,6 +290,8 @@ class Agent:
         """안전장치용 AI 분류기: 결과 예측 질문인지, 없는 문서를 지목했는지. 실패하면 빈 dict(정규식만 쓴다)."""
         inv = {b: self.inventory[b] for b in (banks or sorted(self.inventory))}
         system, user = guard.classify_prompt(question, inv)
+        if self.product == "card":
+            system = system.replace("대출 약관 질문", "신용카드 약관 질문")
         try:
             return guard.parse_classify(self.generate(system, user, model, reminder=False))
         except Exception:  # noqa: BLE001

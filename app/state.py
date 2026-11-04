@@ -19,6 +19,9 @@ from fineprint.present import ref  # noqa: E402
 
 DATA = Path(__file__).resolve().parent / "data"
 BANKS = ["토스뱅크", "카카오뱅크", "하나은행"]
+# 사이클 2 신용카드 (D-011). 화면에는 요약 6줄이 있는 두 상품만 보인다. 신한카드는 상품설명서가 공개되지 않아 뺐다.
+CARD_BANKS = ["하나카드", "BC카드"]
+CARD_LAYER = {1: "표준약관", 2: "부속약관·약정서", 3: "상품설명서"}
 
 
 def load_agent() -> Agent | None:
@@ -28,8 +31,15 @@ def load_agent() -> Agent | None:
         return None
 
 
-def chunk_payload(agent: Agent | None, ids: list[str]) -> dict:
-    by = {c.id: c for c in agent.chunks} if agent else {}
+def load_card_agent() -> Agent | None:
+    try:
+        return Agent(product="card")
+    except Exception:  # data/processed/card가 없으면 카드는 화면에 안 나온다
+        return None
+
+
+def chunk_payload(agent: Agent | None, ids: list[str], card_agent: Agent | None = None) -> dict:
+    by = {c.id: c for a in (agent, card_agent) if a for c in a.chunks}
     out = {}
     for i in ids:
         c = by.get(i)
@@ -37,8 +47,10 @@ def chunk_payload(agent: Agent | None, ids: list[str]) -> dict:
     return out
 
 
-def build(agent: Agent | None, live: bool) -> dict:
+def build(agent: Agent | None, live: bool, card_agent: Agent | None = None) -> dict:
     summaries = json.loads((DATA / "summaries.json").read_text(encoding="utf-8"))
+    if card_agent:
+        summaries += json.loads((DATA / "summaries-card.json").read_text(encoding="utf-8"))
     samples = json.loads((DATA / "samples.json").read_text(encoding="utf-8"))
     glossary = json.loads((DATA / "glossary.json").read_text(encoding="utf-8"))
     banks = []
@@ -49,11 +61,18 @@ def build(agent: Agent | None, live: bool) -> dict:
                 if cs[0].bank == b:
                     docs.append({"title": cs[0].title, "version": cs[0].version, "layer": LAYER_NAME[cs[0].layer]})
             docs.sort(key=lambda x: ["기본약관", "약정서", "상품설명서"].index(x["layer"]))
-        banks.append({"name": b, "docs": docs})
+        banks.append({"name": b, "docs": docs, "product": "loan"})
+    if card_agent:
+        for b in CARD_BANKS:
+            cs0 = [cs[0] for cs in card_agent.doc_chunks.values() if cs[0].bank == b]
+            docs = [{"title": c.title, "version": c.version, "layer": CARD_LAYER[c.layer]}
+                    for c in sorted(cs0, key=lambda c: c.layer)]
+            banks.append({"name": b, "docs": docs, "product": "card"})
     ids = [i for s in summaries for it in s["items"] for i in it["chunk_ids"]]
     ids += [r["chunk_id"] for s in samples for r in s["refs"]]
     ids += [i for t in glossary for i in t["sources"].values()]
     return {"mode": "live" if live else "demo", "today": date.today().isoformat(), "banks": banks,
-            "summaries": {s["bank"]: s["items"] for s in summaries}, "samples": samples,
+            "summaries": {s["bank"]: s["items"] for s in summaries},
+            "products": {s["bank"]: s["product"] for s in summaries if s.get("product")}, "samples": samples,
             "glossary": glossary,
-            "chunks": chunk_payload(agent, list(dict.fromkeys(ids)))}
+            "chunks": chunk_payload(agent, list(dict.fromkeys(ids)), card_agent)}
