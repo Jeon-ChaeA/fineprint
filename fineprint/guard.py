@@ -16,6 +16,7 @@ import re
 
 CANNOT = re.compile(r"판단할 수 없|판단하기 어렵|알 수 없|답할 수 없|단정할 수 없")
 CHECK = re.compile(r"확인\s*(?:이\s*)?필요")
+PARTIAL_CANNOT = re.compile(r"판단할 수 없|단정할 수 없")
 
 # 1. 결과 예측 질문
 PREDICT = [
@@ -23,7 +24,22 @@ PREDICT = [
     re.compile(r"(은행|뱅크)[이가은는]?\s.{0,40}(라고|으라고|하라고)\s*할까요"),
     re.compile(r"(얼마로|몇\s*%로|몇\s*퍼센트로|몇\s*점)\s*[가-힣]{0,6}\s*(줄어|나오|떨어|오르|바뀌|내려)"),
     re.compile(r"(저한테|저에게|제가|저는|제\s).{0,40}(상황인가요|해당(하나요|할까요|될까요|되나요))"),
+    # 2026-11-03 가상 사용자 3차: "금리가 얼마나 오를 수 있나요"를 놓침. '깎아 주나요'는 문서에 우대 폭이 있을 수 있어 뺐다(L07)
+    re.compile(r"얼마나\s*(오를|올라|떨어|내려|낮아|높아)"),
 ]
+
+# 6. 다른 은행의 기존 대출을 묻는 질문 (같은 테스트: 다른 은행 대출의 해약금을 물었는데 고른 은행 기준으로 단정)
+SCOPE_Q = re.compile(r"(다른|타)\s*은행\s*[^.?!]{0,6}(대출|갈아)|타행|기존\s*대출|갈아\s*[타탈탄]|대환")
+
+# 7. 요약 줄이 '확인 필요'인 주제 (문서끼리 다르게 적힘). 질문이 그 주제면 답이 단정해도 '확인 필요'를 붙인다
+TOPIC_Q = {
+    "중도상환해약금": re.compile(r"해약금|중도\s*상환|먼저\s*갚|미리\s*갚|조기\s*상환|일부\s*상환"),
+    "금리가 오르는 조건": re.compile(r"금리"),
+    "연체이자": re.compile(r"연체\s*(이자|금리)"),
+    "한꺼번에 갚아야 하는 경우": re.compile(r"기한의?\s*이익|한꺼번에|일시에|전액"),
+    "신용점수 영향": re.compile(r"신용\s*(점수|평점|정보)"),
+    "만기 연장 조건": re.compile(r"연장"),
+}
 PREDICT_LEAD = ("결론부터 말하면, 이 질문의 결과(은행의 승인·수용 여부나 개인별 금리·한도·점수, 내 상황이 해당하는지)는 "
                 "은행 심사와 개인 조건에 달려 있어 수집한 문서만으로는 판단할 수 없어요. 아래는 문서가 정한 조건과 절차예요.\n\n")
 
@@ -124,9 +140,11 @@ def mortgage_mixed(question: str, text: str) -> bool:
 
 
 def apply(question: str, banks: list[str], inventory: dict[str, list[str]], status: str, text: str,
-          warnings_used: list[str], flags: dict | None = None, n_refs: int | None = None) -> tuple[str, str, list[str]]:
+          warnings_used: list[str], flags: dict | None = None, n_refs: int | None = None,
+          summary_flags: list[tuple[str, str]] | None = None) -> tuple[str, str, list[str]]:
     """(status, text, 붙인 안전장치 이름들)을 돌려준다. flags는 AI 분류기 결과({predict, missing_doc}),
-    n_refs는 답이 실제로 댄 근거 개수(None이면 검사하지 않는다)."""
+    n_refs는 답이 실제로 댄 근거 개수(None이면 검사하지 않는다), summary_flags는 고른 은행의 요약 줄 중
+    '확인 필요'인 (주제, 줄) 목록(화면 서버만 넘긴다)."""
     flags = flags or {}
     fired = []
     by_rule = any(p.search(question) for p in PREDICT)
@@ -140,6 +158,10 @@ def apply(question: str, banks: list[str], inventory: dict[str, list[str]], stat
             # 뒤에 한 줄을 붙인다 (2026-11-03 가상 사용자 테스트: 앞에 붙이면 결론이 밀려 "또 모른다는 거야" 반응)
             status, text = "check_needed", text + "\n\n" + PREDICT_TAIL_SOFT
             fired.append("predict_ai")
+    # 1b. 본문은 판단할 수 없다고 하는데 배지는 '답변'인 경우 (같은 테스트: "인상 폭은 판단할 수 없습니다" + [답변])
+    if status == "answered" and PARTIAL_CANNOT.search(text):
+        status = "check_needed"
+        fired.append("partial_cannot")
     missing = missing_docs(question, banks, inventory)
     if not missing and flags.get("missing_doc"):
         missing = [flags["missing_doc"]]
@@ -166,4 +188,21 @@ def apply(question: str, banks: list[str], inventory: dict[str, list[str]], stat
         if status == "answered":
             status = "check_needed"
         fired.append("mortgage_mix")
+    # 6. 다른 은행의 기존 대출: 어느 은행 문서 기준인지 밝힌다 (배지는 그대로)
+    if SCOPE_Q.search(question) and len(banks) == 1:
+        text += (f"\n\n참고: 위 답은 {banks[0]} 문서 기준이에요. 지금 가진 대출이 다른 은행 상품이면, "
+                 "그 대출의 해약금·조건은 그 은행 약관이나 상품설명서에서 확인해야 해요.")
+        fired.append("scope")
+    # 7. 요약에서 '확인 필요'로 둔 주제를 답이 단정한 경우
+    for topic, line in summary_flags or []:
+        pat = TOPIC_Q.get(topic)
+        if pat and pat.search(question) and not CHECK.search(text):
+            gist = re.sub(r"\s*(이\s*있어\s*)?확인\s*필요.*$", "", line)
+            gist = re.sub(r"[.\s]*문서마다 다르게 적혀 있어$", "", gist).rstrip(". ")
+            text += (f"\n\n확인 필요: 이 주제는 문서끼리 다르게 적혀 있어요(요약: {gist}). "
+                     "어느 쪽이 내 대출에 적용되는지 은행에 확인해 주세요.")
+            if status == "answered":
+                status = "check_needed"
+            fired.append("summary_conflict")
+            break
     return status, text, fired

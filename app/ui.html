@@ -99,6 +99,9 @@ textarea { width: 100%; min-height: 76px; resize: vertical; font: 15px/1.6 var(-
 .answer .lead { font: 600 16px/1.7 var(--display); margin: 0; text-wrap: pretty; }
 .next { font-size: 13.5px; line-height: 1.65; background: var(--accent-soft); border-radius: 6px; padding: 8px 10px; }
 .next b { font-weight: 700; }
+.answer .text p { margin: 0 0 8px; }
+.answer .text p:last-child { margin-bottom: 0; }
+.answer b.chk { color: var(--warn, #b45309); }
 .chip .tag { font: 600 11px/1 var(--body); color: var(--accent); border: 1px solid var(--accent); border-radius: 999px; padding: 2px 6px; margin-right: 6px; vertical-align: 1px; }
 .beta { font-size: 13px; line-height: 1.6; color: var(--hold); background: var(--hold-soft); border-radius: 6px; padding: 8px 10px; }
 .task { background: var(--accent-soft); border: 1px solid var(--rule); border-radius: 10px; padding: 14px 16px; display: grid; gap: 8px; }
@@ -343,6 +346,15 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--rul
     renderSamples();
   }
 
+  // '확인 필요' 답의 다음에 할 일: 왜 확인이 필요한지에 맞춰 말한다 (가상 사용자 3차)
+  function checkNext(raw) {
+    var tips = [];
+    if (/판단할 수 없|단정할 수 없/.test(raw)) tips.push("답에서 판단·단정할 수 없다고 한 부분(은행 심사, 금리 인상 폭, 내 상황이 해당하는지 등)은 은행 앱 상담이나 고객센터에 그대로 물어보세요. 위 근거 번호의 조항을 같이 말하면 빨라요.");
+    if (/확인 필요:/.test(raw)) tips.push("'확인 필요:'로 표시한 문단은 문서끼리 다르거나 수집한 문서에 없는 내용이에요. 은행에 그 부분만 콕 집어 물어보세요.");
+    if (!tips.length) tips.push("답 끝의 '확인 필요' 부분은 문서만으로 확정할 수 없는 내용이에요. 은행에 그 부분만 콕 집어 물어보세요.");
+    return tips.join(" ");
+  }
+
   function renderAnswer(q, a) {
     var key = "a" + Date.now();
     var cite = function (part) {
@@ -353,12 +365,15 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--rul
     var leadRaw = cut > 0 ? raw.slice(0, cut + 1) : raw, restRaw = cut > 0 ? raw.slice(cut + 1) : "";
     var m = restRaw.match(/^(\s*\[\d+\])+/);  // 결론 바로 뒤의 근거 번호는 결론에 붙인다
     if (m) { leadRaw += m[0]; restRaw = restRaw.slice(m[0].length); }
-    var text = '<p class="lead">' + rich(leadRaw, cite) + "</p>" + (restRaw.trim() ? '<div class="text">' + rich(restRaw.trim(), cite) + "</div>" : "");
+    var text = '<p class="lead">' + rich(leadRaw, cite) + "</p>" + (restRaw.trim() ? '<div class="text">' + restRaw.trim().split(/\n+/).map(function (para) {
+      return "<p>" + rich(para.trim(), cite) + "</p>"; }).join("") + "</div>" : "");
     var next = a.status === "cannot_judge"
       ? '<div class="next"><b>다음에 할 일</b> 이 질문을 은행 앱 상담이나 고객센터에 그대로 물어보세요. 위 근거 번호의 조항을 같이 말하면 답을 빨리 들을 수 있어요. 승인·금리·한도처럼 심사로 정해지는 건, 은행 앱에 한도·금리 조회 기능이 있으면 그걸로 미리 확인할 수 있어요.</div>'
       : (a.status === "check_needed" || a.status === "flag_missing")
-      ? '<div class="next"><b>다음에 할 일</b> 답의 \'확인 필요\' 부분은 문서끼리 다르거나 문서에 없는 내용이에요. 은행에 그 부분만 콕 집어 물어보세요.</div>'
+      ? '<div class="next"><b>다음에 할 일</b> ' + checkNext(raw) + "</div>"
       : "";
+    // '확인 필요:'·'지금 할 수 있는 일:' 문단을 눈에 띄게 (2026-11-03 가상 사용자 3차: "어디가 확인 필요인지 안 보였다")
+    text = text.replace(/확인 필요:/g, '<b class="chk">확인 필요:</b>').replace(/지금 할 수 있는 일:/g, "<b>지금 할 수 있는 일:</b>");
     var ids = a.refs.map(function (r) { return r.chunk_id; });
     (a.refs || []).forEach(function (r) { if (!S.chunks[r.chunk_id] && r.text !== undefined) S.chunks[r.chunk_id] = r; });
     var versions = Array.from(new Set(a.refs.map(function (r) { return r.version; }))).sort();

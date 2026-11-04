@@ -66,11 +66,16 @@ PAGE = ("<!doctype html><html lang=\"ko\"><head><meta charset=\"utf-8\">"
         "<style>[hidden]{display:none!important}</style></head><body>")
 
 
+SUMMARIES = json.loads((HERE / "data" / "summaries.json").read_text(encoding="utf-8"))
+
+
 def ask(question: str, bank: str) -> dict:
     named = detect_banks(question)
     banks = named if named else [bank]
     ctx = AGENT.context(question, banks)
     ctx.flags = AGENT.classify(question, ctx.banks)  # 안전장치용 AI 분류기 (eval/results-guard.md)
+    ctx.summary_flags = [(it["topic"], it["line"]) for s in SUMMARIES if s["bank"] in ctx.banks
+                         for it in s["items"] if "확인 필요" in it["line"]]
     system, user = AGENT.prompt(ctx)
     draft = AGENT.generate(system, user)
     system, user = AGENT.review_prompt(ctx, draft)

@@ -89,6 +89,7 @@ class Context:
     warnings: list[crossref.Warning] = field(default_factory=list)
     inventory: dict[str, list[str]] = field(default_factory=dict)  # 은행 → 수집한 문서 이름
     flags: dict = field(default_factory=dict)  # AI 분류기 결과 (guard.classify): {predict, missing_doc}
+    summary_flags: list = field(default_factory=list)  # 고른 은행 요약 중 '확인 필요' 줄 [(주제, 줄)] (화면 서버만)
 
     def render(self) -> str:
         lines = [f"[질문] {self.question}"]
@@ -261,7 +262,8 @@ class Agent:
         used = {ctx.chunks[int(i[1:]) - 1].id for i in ids if i not in invalid}
         used_warn = [w.text() for w in warnings if w.chunk_id in used]
         # 안전장치(D-010): 모델이 놓친 '판단할 수 없음'·'확인 필요'를 코드가 붙인다
-        status, text, _ = guard.apply(ctx.question, banks, inventory, status, text, used_warn, ctx.flags, len(cids))
+        status, text, _ = guard.apply(ctx.question, banks, inventory, status, text, used_warn, ctx.flags, len(cids),
+                                     ctx.summary_flags)
         return Answer(status, text, cites, labels, invalid, [w.text() for w in warnings], raw, cids)
 
     def generate(self, system: str, user: str, model: str | None = None, reminder: bool = True) -> str:
@@ -328,10 +330,12 @@ GEMINI_REMINDER = """
 2. 질문이 지목한 문서가 [수집한 문서]에 없거나, 근거 경고가 있으면 '확인 필요'를 쓴다.
 3. 법·약관의 요건 문구(예: '채권보전에 현저한 위험', '도달일부터 10일 이상', '객관적으로 적정한 조치 없이')는 줄이지 말고 그대로 옮긴다.
 4. 짧게 쓰려고 질문이 직접 묻는 요소(기간, 금액, 대상, 예외)를 빼지 않는다. 질문에 물음이 여러 개면 하나씩 모두 답한다.
-5. 답의 첫 문장은 질문에 대한 결론 한 줄이다(예: "네, …", "아니요, …", "문서만으로는 판단할 수 없어요. …"). 근거와 조건은 그다음에 쓴다.
+5. 답의 첫 문장은 질문에 대한 결론 한 줄이다(예: "네, …", "아니요, …", "문서만으로는 판단할 수 없어요. …"). 근거와 조건은 그다음에 쓴다. 질문이 다른 은행 대출·기존 대출·갈아타기를 말하면 첫 문장에 어느 은행 문서 기준인지 밝힌다.
+5-1. 질문에 내 경우의 숫자(열흘, 2번, 1천만원 등)가 있으면 그 숫자를 문서 기준에 대어 결론을 쓴다(예: "열흘이면 5영업일을 넘으니 단기연체정보 제공 대상일 수 있어요"). 기준이 바뀌는 경계도 함께 쓴다(예: "1개월이 지나면 원금 전체에 연체이자").
 6. 질문이 신용대출·마이너스통장이면 주택담보대출 조건(2개월, 3회 등)을 결론으로 쓰지 않는다. 함께 적을 때는 "주택담보대출은 다르다"고 구분한다.
 7. 모든 사실 문장에 근거 번호(C번호)를 단다. 근거가 없는 사실은 쓰지 않는다.
-8. 형식은 지시대로 JSON 하나만 낸다."""
+8. 답의 마지막 문장은 줄을 바꿔 "지금 할 수 있는 일:"로 시작하고, 근거에 적힌 절차·방법(예: 만기 전 앱에서 연장 신청, 고객센터 문의, 금리인하요구 신청) 중 질문에 맞는 하나를 근거 번호와 함께 쓴다. 근거에 그런 절차가 없으면 이 문장을 쓰지 않는다.
+9. 형식은 지시대로 JSON 하나만 낸다."""
 
 
 def gemini_generate(system: str, user: str, model: str, retries: int = 3, reminder: bool = True) -> str:
