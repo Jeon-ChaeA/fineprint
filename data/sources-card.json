@@ -1,7 +1,7 @@
 {
   "retrieved_at": "2026-11-04",
   "product": "신용카드",
-  "note": "사이클 2(D-011). 원문 PDF는 data/raw/card/에 두고 레포에 올리지 않는다. 카드사 서버가 클라우드 작업 공간에서 막혀 전채아 PC의 브라우저로 받았다. 'bank' 필드는 코어 호환을 위해 카드사 이름을 담는다. 3층 하나카드 시행일은 준법심의일(출시 2026-07-01). BC카드 표준약관은 웹 페이지(2026.05.12 시행)로 하나·신한과 같은 표준안이라 받지 않았다. BC 안내장은 이미지 PDF라 분할기 대신 OCR(tesseract kor) 텍스트를 쓴다(심의필 날짜 기준 2026-04-20, OCR 판독).",
+  "note": "사이클 2(D-011). 원문 PDF는 data/raw/card/에 두고 레포에 올리지 않는다. 카드사 서버가 클라우드 작업 공간에서 막혀 전채아 PC의 브라우저로 받았다. 'bank' 필드는 코어 호환을 위해 카드사 이름을 담는다. 3층 하나카드 시행일은 준법심의일(출시 2026-07-01). BC카드 표준약관·부속약관은 PDF 없이 웹 페이지로만 공개돼, 전채아 승인 후 페이지 본문을 텍스트 파일로 저장했다(sha256은 그 텍스트 파일 기준). BC 안내장(BC 바로 클리어 플러스)은 비교 상품(신세계 BC 바로 클리어 플러스)과 다른 상품이고 이미지 PDF라 검색에서 뺐다(search=false). OCR 텍스트는 raw에만 둔다.",
   "documents": [
     {
       "id": "hana_card_basic",
@@ -104,7 +104,30 @@
       "file": "bc_card_leaflet_clearplus.pdf",
       "url": "https://www.bccard.com/down/individual/customer/101922.pdf",
       "sha256": "b29ec005ed8e57de72273196da2c6fd430568db0371b310f968f731af329549a",
-      "bytes": 3219859
+      "bytes": 3219859,
+      "search": false
+    },
+    {
+      "id": "bc_card_basic",
+      "bank": "BC카드",
+      "layer": 1,
+      "title": "신용카드 개인회원 표준약관 (웹 페이지)",
+      "effective": "2026-05-12",
+      "file": "bc_card_basic.txt",
+      "url": "https://www.bccard.com/app/card/BcTerms.do?code=01",
+      "sha256": "373e7ed85bb408484958a6e49ba6f263fe1e2ff3e30a58d7f9035bb79cbc97c6",
+      "bytes": 90445
+    },
+    {
+      "id": "bc_card_addendum",
+      "bank": "BC카드",
+      "layer": 2,
+      "title": "신용카드 개인회원 부속약관 (웹 페이지)",
+      "effective": "2021-03-01",
+      "file": "bc_card_addendum.txt",
+      "url": "https://www.bccard.com/app/card/BcTerms.do?code=01",
+      "sha256": "764a7d0bffac3c37e1b4349bf29c7b72bd1e6b2741f4d0c2c99940961beee99a",
+      "bytes": 5346
     }
   ]
 }

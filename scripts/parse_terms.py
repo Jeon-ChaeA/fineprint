@@ -223,7 +223,15 @@ def main():
         digest = hashlib.sha256(f.read_bytes()).hexdigest()
         if digest != d.get("sha256"):
             print(f"[경고] {d['id']}: sha256이 문서 목록과 다름. 약관이 바뀌었을 수 있음")
-        pages = extract_tables(f) if d.get("tables") else extract(f)
+        if d.get("search") is False:  # 비교 대상이 아닌 참고 문서(BC 안내장: 다른 상품, 이미지 PDF)는 검색에 넣지 않는다
+            (out / f"{d['id']}.json").unlink(missing_ok=True)
+            (out / f"{d['id']}.txt").unlink(missing_ok=True)
+            print(f"[제외] {d['id']}: 검색 대상 아님")
+            continue
+        if f.suffix == ".txt":  # 웹 페이지로만 공개된 약관(BC카드)은 페이지 글을 저장한 텍스트로 받는다
+            pages = [(1, [ln.rstrip() for ln in f.read_text(encoding="utf-8").splitlines()])]
+        else:
+            pages = extract_tables(f) if d.get("tables") else extract(f)
         full = "\n\n".join(f"[p.{n}]\n" + "\n".join(ls) for n, ls in pages)
         (out / f"{d['id']}.txt").write_text(full, encoding="utf-8")
         units = split_articles(pages) if d["layer"] in (1, 2) else []
