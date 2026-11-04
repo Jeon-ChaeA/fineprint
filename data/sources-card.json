@@ -34,7 +34,8 @@
       "file": "hana_card_revolving.pdf",
       "url": "https://www.hanacard.co.kr/ATTACH/WWW/pdf/provision/revolving_agreement_240201.pdf",
       "sha256": "51b7d142724c64eb628fa2d2dcefa5dae8c663266e67798c9d416b84ebc9f08e",
-      "bytes": 116487
+      "bytes": 116487,
+      "tables": true
     },
     {
       "id": "hana_card_manual_moving",
@@ -45,7 +46,8 @@
       "file": "hana_card_manual_moving.pdf",
       "url": "https://m.hanacard.co.kr/leaflet/15/15725_20260608.pdf",
       "sha256": "7a6f3a2a514649e1507ae6de77271917e0fd6f89423bb756be2f3d1bcbf10f63",
-      "bytes": 4160473
+      "bytes": 4160473,
+      "tables": true
     },
     {
       "id": "shinhan_card_basic",
@@ -78,7 +80,8 @@
       "file": "shinhan_card_manual_common.pdf",
       "url": "https://www.shinhancard.com/pconts/download/card_member_terms/T20241125393841.pdf",
       "sha256": "8a989dc1b0fb75636268c4797ff6f7f54a86fd4c58ed3d0c10f34c165d0ef181",
-      "bytes": 1880281
+      "bytes": 1880281,
+      "tables": true
     },
     {
       "id": "bc_card_manual_clearplus",
@@ -89,7 +92,8 @@
       "file": "bc_card_manual_clearplus.pdf",
       "url": "https://www.bccard.com/down/individual/customer/baro_clearplus_card_20260615.pdf",
       "sha256": "b3dd8d053387fd0d2d53ce157b86b2456598b0e1dc67592b41743cf072b6e460",
-      "bytes": 481045
+      "bytes": 481045,
+      "tables": true
     },
     {
       "id": "bc_card_leaflet_clearplus",
