@@ -72,7 +72,7 @@ def load(processed: Path | str = ROOT / "data" / "processed") -> list[Chunk]:
     chunks: list[Chunk] = []
     for path in sorted(Path(processed).glob("*.json")):
         d = json.loads(path.read_text(encoding="utf-8"))
-        bank = BANKS[d["id"].split("_")[0]]
+        bank = d.get("bank") or BANKS[d["id"].split("_")[0]]  # 카드 문서는 bank에 카드사 이름이 들어 있다
         base = dict(doc=d["id"], bank=bank, title=d["title"], version=d["effective"], layer=d["layer"])
         for u in d["units"]:
             if d["unit"] == "page":

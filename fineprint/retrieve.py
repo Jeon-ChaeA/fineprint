@@ -55,6 +55,35 @@ SYNONYMS = {
 
 BANK_ALIASES = {"토스뱅크": ["토스"], "카카오뱅크": ["카카오"], "하나은행": ["하나"]}
 
+# --- 사이클 2: 신용카드 (D-011). 대출(product="loan")의 검색은 바꾸지 않는다 -----------------
+# 사용자가 쓰는 말 → 카드 문서가 쓰는 말. 카드사마다 같은 뜻을 다르게 쓴다(하나카드 '지난달 실적' = 다른 곳 '전월 실적')
+CARD_SYNONYMS = {
+    "전월 실적": ["지난달 실적", "전월실적", "이용실적"],
+    "전월실적": ["지난달 실적", "전월 실적", "이용실적"],
+    "지난달": ["전월 실적", "지난달 실적"],
+    "실적": ["이용실적", "전월 실적", "지난달 실적"],
+    "실적에서 빠": ["실적 제외", "제외 항목", "실적 제외 항목"],
+    "실적 인정": ["실적 제외", "제외 항목"],
+    "빠지는": ["제외", "제외 항목"],
+    "한도": ["할인 한도", "통합할인한도", "적립 한도", "총 한도", "월 한도"],
+    "얼마까지": ["한도", "할인 한도", "적립 한도"],
+    "혜택이 바뀌": ["부가서비스", "변경", "축소", "폐지", "3년"],
+    "혜택이 줄": ["부가서비스", "축소", "폐지", "3년", "6개월"],
+    "혜택 변경": ["부가서비스", "변경", "축소", "3년", "6개월"],
+    "혜택": ["부가서비스", "할인", "적립"],
+    "연회비 돌려": ["연회비 반환", "일할", "반환"],
+    "해지하면": ["계약해지", "연회비 반환", "해지"],
+    "리볼빙": ["일부결제금액이월약정", "리볼빙"],
+    "일부만 결제": ["일부결제금액이월약정", "최소결제"],
+    "현금서비스": ["단기카드대출", "현금서비스"],
+    "카드론": ["장기카드대출", "카드론"],
+    "연체": ["연체이자", "지연배상금", "연체금리", "연체가산"],
+    "포인트": ["적립", "하나머니", "마이신한포인트"],
+    "가족카드": ["가족카드", "합산"],
+    "해외": ["해외 이용", "해외서비스 수수료", "국내외"],
+}
+CARD_ALIASES = {"하나카드": ["하나카드"], "신한카드": ["신한"], "BC카드": ["BC", "비씨", "바로카드", "바로 클리어"]}
+
 _TOKEN = re.compile(r"[가-힣]+|[A-Za-z]+|\d+")
 
 
@@ -72,7 +101,9 @@ def tokens(text: str) -> list[str]:
 _HANA = re.compile(r"하나\s*(?:은행|뱅크|에서|에서는|에\s|에도|은\s|는\s|의\s|랑|와\s|\s*(?:신용)?대출|\s*마이너스)")
 
 
-def detect_banks(question: str) -> list[str]:
+def detect_banks(question: str, product: str = "loan") -> list[str]:
+    if product == "card":
+        return [b for b, al in CARD_ALIASES.items() if b in question or any(a in question for a in al)]
     found = []
     for b, al in BANK_ALIASES.items():
         if b == "하나은행":
@@ -84,15 +115,17 @@ def detect_banks(question: str) -> list[str]:
     return found
 
 
-def expand(question: str) -> str:
-    extra = [s for k, v in SYNONYMS.items() if k in question for s in v]
+def expand(question: str, product: str = "loan") -> str:
+    table = CARD_SYNONYMS if product == "card" else SYNONYMS
+    extra = [s for k, v in table.items() if k in question for s in v]
     return question + " " + " ".join(extra)
 
 
 class Index:
     PAGE_PIECES = 3
 
-    def __init__(self, chunks: list[Chunk], k1: float = 1.2, b: float = 0.75):
+    def __init__(self, chunks: list[Chunk], k1: float = 1.2, b: float = 0.75, product: str = "loan"):
+        self.product = product
         self.chunks = chunks
         self.by_id = {c.id: c for c in chunks}
         self.k1, self.b = k1, b
@@ -113,8 +146,8 @@ class Index:
         return s
 
     def search(self, question: str, banks: list[str] | None = None, k: int = 8) -> list[tuple[Chunk, float]]:
-        q = Counter(tokens(expand(question)))
-        banks = banks or detect_banks(question)
+        q = Counter(tokens(expand(question, self.product)))
+        banks = banks or detect_banks(question, self.product)
         scored = []
         for i, c in enumerate(self.chunks):
             if banks and c.bank not in banks:

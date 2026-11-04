@@ -24,7 +24,7 @@ import re
 from dataclasses import dataclass, field
 
 from . import crossref, guard
-from .corpus import Chunk, load
+from .corpus import ROOT, Chunk, load
 from .retrieve import Index, detect_banks
 
 SYSTEM = """너는 fineprint다. 한국 은행 신용대출 약관을 읽고, 사용자의 질문에 **주어진 근거 안에서만** 답한다.
@@ -134,9 +134,11 @@ ACCELERATION = re.compile(r"(?:당장|한꺼번에|전부|전액|모두)\s*(?:�
 
 
 class Agent:
-    def __init__(self, max_chunks: int = 30):
-        self.chunks = load()
-        self.index = Index(self.chunks)
+    def __init__(self, max_chunks: int = 30, product: str = "loan"):
+        # product="card"는 사이클 2(신용카드) 문서(data/processed/card)를 읽는다 (D-011)
+        self.product = product
+        self.chunks = load(ROOT / "data" / "processed" / "card") if product == "card" else load()
+        self.index = Index(self.chunks, product=product)
         self.max_chunks = max_chunks
         self.doc_chunks: dict[str, list[Chunk]] = {}
         for c in self.chunks:
@@ -154,7 +156,7 @@ class Agent:
 
     # 1. 검색과 근거 묶기 -------------------------------------------------
     def context(self, question: str, banks: list[str] | None = None) -> Context:
-        banks = banks or detect_banks(question)
+        banks = banks or detect_banks(question, self.product)
         hits = [c for c, _ in self.index.search_layered(question, banks=banks)]
         # 우선순위대로 담고 마지막에 자른다: 검색 결과(+짧은 문서 전체, 참조된 기본약관 조) → 같은 조의 다른 항
         chunks: list[Chunk] = []
@@ -256,7 +258,7 @@ class Agent:
                 invalid.append(i)
         status = data.get("status", "answered")
         # 평가 채점처럼 근거 목록만으로 만든 Context에는 은행·문서 목록·경고가 없을 수 있어 여기서 채운다
-        banks = ctx.banks or detect_banks(ctx.question) or sorted({c.bank for c in ctx.chunks})
+        banks = ctx.banks or detect_banks(ctx.question, self.product) or sorted({c.bank for c in ctx.chunks})
         inventory = ctx.inventory or {b: self.inventory.get(b, []) for b in banks}
         warnings = ctx.warnings or [w for c in ctx.chunks for w in crossref.check(c, self.basic.get(c.bank, {}))]
         used = {ctx.chunks[int(i[1:]) - 1].id for i in ids if i not in invalid}
