@@ -1,4 +1,4 @@
-<title>fineprint 신용대출</title>
+<title>fineprint 약관 읽기</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -333,9 +333,26 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--rul
     "신용점수 영향": "예: 연체한 돈을 다 갚으면 신용점수가 바로 돌아오나요?",
     "만기 연장 조건": "예: 만기 연장을 신청하면 금리나 한도가 바뀌나요?" };
   var DEFAULT_HINT = "예: 이자 자동이체일인데 밤 9시에 돈을 넣었어요. 오늘 낸 걸로 처리되나요?";
+  // 신용카드: 미리 만든 답이 없어서 예시는 입력창에 채우기만 한다
+  var CARD_HINT = {
+    "전월 실적 조건": "예: 카드를 새로 만들었는데 첫 달에도 할인을 받을 수 있나요?",
+    "실적에서 빠지는 이용": "예: 아파트 관리비 낸 것도 전월 실적에 들어가나요?",
+    "혜택 한도": "예: 이번 달 할인 한도를 다 못 쓰면 다음 달로 넘어가나요?",
+    "부가서비스 변경": "예: 쓰던 혜택이 갑자기 없어질 수도 있나요?",
+    "연회비와 해지 시 반환": "예: 반년 쓰고 해지하면 연회비를 돌려받나요?",
+    "연체·리볼빙 비용": "예: 결제일 오후 5시에 돈을 넣으면 연체되나요?" };
+  var CARD_DEFAULT = "예: 상품권 산 것도 전월 실적에 들어가나요?";
+  var CARD_EXAMPLES = ["아파트 관리비 낸 것도 전월 실적에 들어가나요?", "이번 달 할인 한도를 다 못 쓰면 다음 달로 넘어가나요?", "반년 쓰고 해지하면 연회비를 돌려받나요?"];
+  function isCard() { return S.banks.some(function (b) { return (b.name || b.bank) === bank && b.product === "card"; }); }
   var topic = null;
 
   function renderSamples() {
+    if (isCard()) {
+      var ex = topic && CARD_HINT[topic] ? [CARD_HINT[topic].replace(/^예: /, "")] : CARD_EXAMPLES;
+      $("samples-title").textContent = "예시 질문 (누르면 입력창에 채워져요)";
+      $("samples").innerHTML = ex.map(function (q) { return '<button type="button" class="chip" data-q="' + esc(q) + '">' + esc(q) + "</button>"; }).join("");
+      return;
+    }
     var list = S.samples.filter(function (s) { return s.bank === bank || s.bank === "공통"; });
     var rel = topic ? (TOPIC_SAMPLES[topic] || []) : [];
     list.sort(function (a, b) { return (rel.indexOf(a.id) < 0) - (rel.indexOf(b.id) < 0); });
@@ -350,7 +367,7 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--rul
   function setTopic(t) {
     topic = t;
     $("ctx").hidden = !t; $("ctx-topic").textContent = t || "";
-    $("question").placeholder = (t && TOPIC_HINT[t]) || DEFAULT_HINT;
+    $("question").placeholder = isCard() ? ((t && CARD_HINT[t]) || CARD_DEFAULT) : ((t && TOPIC_HINT[t]) || DEFAULT_HINT);
     renderSamples();
   }
 
@@ -459,6 +476,7 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--rul
 
   $("samples").addEventListener("click", function (e) {
     var c = e.target.closest(".chip"); if (!c) return;
+    if (c.getAttribute("data-q")) { $("question").value = c.getAttribute("data-q"); $("question").focus(); return; }
     var s = S.samples.filter(function (x) { return x.id === c.getAttribute("data-id"); })[0];
     renderAnswer(s.question, s);  // 입력창은 건드리지 않는다 (사용성 테스트 의견)
     var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
