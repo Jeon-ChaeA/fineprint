@@ -14,7 +14,7 @@
 | **해결** | ① 불리할 수 있는 조건 6줄 요약 (줄마다 조항 원문) ② 내 상황을 물으면 조항을 찾아 근거와 함께 답하고, 문서로 정할 수 없으면 **판단할 수 없다고 말하는** 답변 |
 | **신뢰 설계** | 검색·교차 참조 확인·인용 검증·안전장치는 **코드**가 하고, 모델은 준 근거 안에서 문장만 쓴다. 근거 목록에 없는 인용은 코드가 걸러 내서, 모델을 바꿔도 신뢰 장치는 그대로 남는다 |
 | **검증** | 72문항 평가(인용 정확도 100%, 답 정확도 97% · Claude 기준), 처음 보는 질문 85개로 안전장치 확인, 사용성 테스트 3회 |
-| **결과물** | 배포된 베타, [PRD](docs/prd.md), [기업용 도입 제안서](docs/proposal-enterprise.md), [회고](docs/retrospective.md), 결정 기록 11건 |
+| **결과물** | 배포된 베타, [PRD](docs/prd.md), [기업용 도입 제안서](docs/proposal-enterprise.md), [회고](docs/retrospective.md), 결정 기록 12건 |
 
 ## 문제: 근거 (설문 39명, 앱 4곳 관찰)
 
@@ -90,7 +90,7 @@
 | [docs/proposal-enterprise.md](docs/proposal-enterprise.md) | 기업용 도입 제안서: 설명의무 점검 에이전트 |
 | [docs/retrospective.md](docs/retrospective.md) | 사이클 1 빌드 로그와 회고 |
 | [docs/problem-statement.md](docs/problem-statement.md) | 문제 정의 1페이지 |
-| [docs/decision-log.md](docs/decision-log.md) | 주요 결정 11건과 이유, 검토한 대안 |
+| [docs/decision-log.md](docs/decision-log.md) | 주요 결정 12건과 이유, 검토한 대안 |
 | [docs/roadmap.md](docs/roadmap.md) | 사이클별 계획과 진행 |
 | [docs/devlog/](docs/devlog/) | 날짜별 작업 기록 (사람이 판단한 지점 포함) |
 | [docs/concept.md](docs/concept.md) · [design-principles.md](docs/design-principles.md) · [data-policy.md](docs/data-policy.md) | 콘셉트, 설계 원칙, 데이터 원칙 |
