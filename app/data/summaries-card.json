@@ -3,12 +3,12 @@
     "bank": "하나카드",
     "product": "MOVING카드",
     "items": [
-      {"topic": "전월 실적 조건", "line": "영역마다 다름: '지난달 실적 조건 50만원 이상'인 적립과 '조건 없음'인 적립이 섞여 있음. 첫 사용 등록 후 다음달 말일까지는 50만원 미만이어도 50만원 기준으로 제공", "chunk_ids": ["hana_card_manual_moving:p6#0", "hana_card_manual_moving:p5#0", "hana_card_manual_moving:p9#2"], "draft": true},
-      {"topic": "실적에서 빠지는 이용", "line": "국세·지방세·공과금·아파트관리비·국민연금·건강보험 등 보험료·학교 납입금·상품권·선불 충전·부동산임대료, 그리고 PLAY/LIFE 모드로 적립받은 매출 전체가 지난달 실적에서 빠짐", "chunk_ids": ["hana_card_manual_moving:p9#1"], "draft": true},
-      {"topic": "혜택 한도", "line": "영역별 월 적립 한도가 따로 있음(예: 커피 1만 하나머니). '3일 쓰면 2배 적립'도 영역별 월 한도 안에서만 늘어남", "chunk_ids": ["hana_card_manual_moving:p6#0", "hana_card_manual_moving:p3#2"], "draft": true},
-      {"topic": "부가서비스 변경", "line": "출시(2026년 7월 1일) 후 3년 이상 유지. 수익성이 낮아져 바꿀 때는 변경 6개월 전부터 매월 알림, 카드사·제휴사 사정이면 사유 발생 즉시 알림", "chunk_ids": ["hana_card_manual_moving:p12#0", "hana_card_manual_moving:p12#1", "hana_card_manual_moving:p12#2"], "draft": true},
-      {"topic": "연회비와 해지 시 반환", "line": "연회비 2만원(기본 1만원+제휴 1만원). 해지하면 발급·부가서비스 비용을 빼고 일할 반환하는데, 부가서비스 상품이라 해지일 기준 다음 다음달 5영업일에 입금", "chunk_ids": ["hana_card_manual_moving:p11#0", "hana_card_manual_moving:p11#1"], "draft": true},
-      {"topic": "연체·리볼빙 비용", "line": "연체이자율은 약정이율+최대 3%(법정 최고 20%). 결제계좌에 16시 이후 입금하면 당일 출금이 안 돼 연체될 수 있음. 리볼빙 수수료율은 3개월 뒤 다시 정해질 수 있음", "chunk_ids": ["hana_card_manual_moving:p12#6", "hana_card_manual_moving:p12#7", "hana_card_manual_moving:p12#4", "hana_card_revolving:p1#2", "hana_card_revolving:p1#3"], "draft": true}
+      {"topic": "전월 실적 조건", "line": "영역마다 다름: '지난달 실적 조건 50만원 이상'인 적립과 '조건 없음'인 적립이 섞여 있음. 첫 사용 등록 후 다음달 말일까지는 50만원 미만이어도 50만원 기준으로 제공", "chunk_ids": ["hana_card_manual_moving:p6#0", "hana_card_manual_moving:p5#0", "hana_card_manual_moving:p9#2"], "reviewed": "2026-11-06 전채아 원문 대조 확정"},
+      {"topic": "실적에서 빠지는 이용", "line": "국세·지방세·공과금·아파트관리비·국민연금·건강보험 등 보험료·학교 납입금·상품권·선불 충전·부동산임대료, 그리고 PLAY/LIFE 모드로 적립받은 매출 전체가 지난달 실적에서 빠짐", "chunk_ids": ["hana_card_manual_moving:p9#1"], "reviewed": "2026-11-06 전채아 원문 대조 확정"},
+      {"topic": "혜택 한도", "line": "영역별 월 적립 한도가 따로 있음(예: 커피 1만 하나머니). '3일 쓰면 2배 적립'도 영역별 월 한도 안에서만 늘어남", "chunk_ids": ["hana_card_manual_moving:p6#0", "hana_card_manual_moving:p3#2"], "reviewed": "2026-11-06 전채아 원문 대조 확정"},
+      {"topic": "부가서비스 변경", "line": "출시(2026년 7월 1일) 후 3년 이상 유지. 수익성이 낮아져 바꿀 때는 변경 6개월 전부터 매월 알림, 카드사·제휴사 사정이면 사유 발생 즉시 알림", "chunk_ids": ["hana_card_manual_moving:p12#0", "hana_card_manual_moving:p12#1", "hana_card_manual_moving:p12#2"], "reviewed": "2026-11-06 전채아 원문 대조 확정"},
+      {"topic": "연회비와 해지 시 반환", "line": "연회비 2만원(기본 1만원+제휴 1만원). 해지하면 발급·부가서비스 비용을 빼고 일할 반환하는데, 부가서비스 상품이라 해지일 기준 다음 다음달 5영업일에 입금", "chunk_ids": ["hana_card_manual_moving:p11#0", "hana_card_manual_moving:p11#1"], "reviewed": "2026-11-06 전채아 원문 대조 확정"},
+      {"topic": "연체·리볼빙 비용", "line": "연체이자율은 약정이율+최대 3%(법정 최고 20%). 결제계좌에 16시 이후 입금하면 당일 출금이 안 돼 연체될 수 있음. 리볼빙 수수료율은 3개월 뒤 다시 정해질 수 있음", "chunk_ids": ["hana_card_manual_moving:p12#6", "hana_card_manual_moving:p12#7", "hana_card_manual_moving:p12#4", "hana_card_revolving:p1#2", "hana_card_revolving:p1#3"], "reviewed": "2026-11-06 전채아 원문 대조 확정"}
     ],
     "missing": []
   },
@@ -16,12 +16,12 @@
     "bank": "BC카드",
     "product": "신세계 BC 바로 클리어 플러스",
     "items": [
-      {"topic": "전월 실적 조건", "line": "전월 실적 20만원 이상이어야 할인. 40만원·60만원 이상이면 한도가 늘어남. 첫 사용 등록 후 다음달 말일까지는 20만원 이상 기준 한도 제공", "chunk_ids": ["bc_card_manual_clearplus:p3#0", "bc_card_manual_clearplus:p3#2"], "draft": true},
-      {"topic": "실적에서 빠지는 이용", "line": "현금서비스·카드론·연회비·연체료·국세·지방세·보험료·공과금·아파트 관리비·학교 납입금·대학 등록금·선불 충전·상품권이 전월 실적에서 빠짐. 무이자할부는 할인도 안 됨", "chunk_ids": ["bc_card_manual_clearplus:p3#3"], "draft": true},
-      {"topic": "혜택 한도", "line": "월 총 할인 한도 5,000원(20만원 이상)·10,000원(40만원 이상)·20,000원(60만원 이상). 남은 한도는 이월되지 않고 본인·가족카드 합산", "chunk_ids": ["bc_card_manual_clearplus:p3#0", "bc_card_manual_clearplus:p3#1"], "draft": true},
-      {"topic": "부가서비스 변경", "line": "법령이 정한 경우를 빼고 출시 후 3년 이내에는 줄이거나 없앨 수 없음. 줄일 때는 변경일 6개월 전부터 매월 알림", "chunk_ids": ["bc_card_manual_clearplus:p12#1", "bc_card_manual_clearplus:p12#2"], "draft": true},
-      {"topic": "연회비와 해지 시 반환", "line": "연회비 5,000원(제휴연회비). 해지하면 발급·부가서비스 비용을 빼고 일할 반환, 10영업일(불가피하면 3개월) 이내", "chunk_ids": ["bc_card_manual_clearplus:p2#0", "bc_card_manual_clearplus:p6#1", "bc_card_manual_clearplus:p6#3"], "draft": true},
-      {"topic": "연체·리볼빙 비용", "line": "연체이자율은 약정금리+최대 3%p(법정 최고 20%), 신용점수 하락 가능. 리볼빙은 이월잔액에 수수료(예: 50만원·연 17%면 한 달 6,986원)", "chunk_ids": ["bc_card_manual_clearplus:p7#1", "bc_card_manual_clearplus:p1#4", "bc_card_manual_clearplus:p1#3"], "draft": true}
+      {"topic": "전월 실적 조건", "line": "전월 실적 20만원 이상이어야 할인. 40만원·60만원 이상이면 한도가 늘어남. 첫 사용 등록 후 다음달 말일까지는 20만원 이상 기준 한도 제공", "chunk_ids": ["bc_card_manual_clearplus:p3#0", "bc_card_manual_clearplus:p3#2"], "reviewed": "2026-11-06 전채아 원문 대조 확정"},
+      {"topic": "실적에서 빠지는 이용", "line": "현금서비스·카드론·연회비·연체료·국세·지방세·보험료·공과금·아파트 관리비·학교 납입금·대학 등록금·선불 충전·상품권이 전월 실적에서 빠짐. 무이자할부는 할인도 안 됨", "chunk_ids": ["bc_card_manual_clearplus:p3#3"], "reviewed": "2026-11-06 전채아 원문 대조 확정"},
+      {"topic": "혜택 한도", "line": "월 총 할인 한도 5,000원(20만원 이상)·10,000원(40만원 이상)·20,000원(60만원 이상). 남은 한도는 이월되지 않고 본인·가족카드 합산", "chunk_ids": ["bc_card_manual_clearplus:p3#0", "bc_card_manual_clearplus:p3#1"], "reviewed": "2026-11-06 전채아 원문 대조 확정"},
+      {"topic": "부가서비스 변경", "line": "법령이 정한 경우를 빼고 출시 후 3년 이내에는 줄이거나 없앨 수 없음. 줄일 때는 변경일 6개월 전부터 매월 알림", "chunk_ids": ["bc_card_manual_clearplus:p12#1", "bc_card_manual_clearplus:p12#2"], "reviewed": "2026-11-06 전채아 원문 대조 확정"},
+      {"topic": "연회비와 해지 시 반환", "line": "연회비 5,000원(제휴연회비). 해지하면 발급·부가서비스 비용을 빼고 일할 반환, 10영업일(불가피하면 3개월) 이내", "chunk_ids": ["bc_card_manual_clearplus:p2#0", "bc_card_manual_clearplus:p6#1", "bc_card_manual_clearplus:p6#3"], "reviewed": "2026-11-06 전채아 원문 대조 확정"},
+      {"topic": "연체·리볼빙 비용", "line": "연체이자율은 약정금리+최대 3%p(법정 최고 20%), 신용점수 하락 가능. 리볼빙은 이월잔액에 수수료(예: 50만원·연 17%면 한 달 6,986원)", "chunk_ids": ["bc_card_manual_clearplus:p7#1", "bc_card_manual_clearplus:p1#4", "bc_card_manual_clearplus:p1#3"], "reviewed": "2026-11-06 전채아 원문 대조 확정"}
     ],
     "missing": []
   }

@@ -312,7 +312,7 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--rul
     var items = S.summaries[bank] || [];
     var prod = (S.products || {})[bank];
     $("sum-lede").textContent = prod
-      ? bank + " " + prod + " 문서에서 카드를 쓰는 사람에게 불리할 수 있는 조건을 " + items.length + "줄로 모았어요. 줄마다 근거 원문을 펼쳐 볼 수 있어요. (신용카드는 베타: 요약은 사람 대조 전 초안이에요)"
+      ? bank + " " + prod + " 문서에서 카드를 쓰는 사람에게 불리할 수 있는 조건을 " + items.length + "줄로 모았어요. 줄마다 근거 원문을 펼쳐 볼 수 있어요. (신용카드는 베타: 답 품질 평가는 아직이에요)"
       : bank + " 문서에서 대출받는 사람에게 불리할 수 있는 조건을 " + items.length + "줄로 모았어요. 줄마다 근거 조항 원문을 펼쳐 볼 수 있어요.";
     $("items").innerHTML = items.map(function (it) {
       return '<li class="item"><div class="topic">' + esc(it.topic) + '</div><div class="body"><div class="line">' + rich(it.line) +
